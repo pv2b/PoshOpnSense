@@ -127,5 +127,9 @@ function Out-OpnSenseXMLConfig {
     }
     
     $r.username = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-    $ConfigXML.Save($FilePath)
+    # We need to do this load of nonsense because Powershell paths are a royal
+    # pain in the behind.
+    $sw = New-Object System.IO.StringWriter
+    $ConfigXML.Save($sw)
+    Set-Content -Value $sw.ToString() -Path $FilePath
 }
