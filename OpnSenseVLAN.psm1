@@ -34,7 +34,7 @@ An integer (between 1 and 4094) representing the VLAN ID to use.
 A string containing a "friendly description" of the VLAN in question.
 
 .EXAMPLE
-Get-OpnSenseXMLConfig config.xml | New-OpnSenseVLAN -Interface em0 -VLANTag 1234 | Out-OpnSenseXMLConfig config.xml
+$c = Get-OpnSenseXMLConfig config.xml; $c | New-OpnSenseVLAN -Interface em0 -VLANTag 1234; $c | Out-OpnSenseXMLConfig config.xml
 
 Edit a configuration file and add a VLAN definition with a parent interface
 em0 and a VLAN tag of 1234.
@@ -107,7 +107,7 @@ referring to the VLAN in question. That will have to be done with other
 cmdlets.
 
 .EXAMPLE
-Get-OpnSenseXMLConfig config.xml | Get-OpnSenseVLAN -Interface em0 -VLANTag 1234 | Set-OpnSenseVLAN -Description "The one-two-three-four network" | Out-OpnSenseXMLConfig config.xml
+$c = Get-OpnSenseXMLConfig config.xml; $c | Get-OpnSenseVLAN -Interface em0 -VLANTag 1234 | Set-OpnSenseVLAN -Description "The one-two-three-four network"; $c | Out-OpnSenseXMLConfig config.xml
 
 Edit a configuration file and add a description to the VLAN with tag 1234
 on interface em0.
@@ -271,14 +271,14 @@ A System.Xml.XmlElement object referring to the VLAN, as provided by the
 Get-OpnSenseVLAN cmdlet.
 
 .EXAMPLE
-Get-OpnSenseXMLConfig config.xml | Remove-OpnSenseVLAN -Interface em0 -VLANTag 1234 | Out-OpnSenseXMLConfig config.xml
+$c = Get-OpnSenseXMLConfig config.xml; $c | Remove-OpnSenseVLAN -Interface em0 -VLANTag 1234; $c | Out-OpnSenseXMLConfig config.xml
 
 Edit a configuration file and remove a VLAN definition with a parent interface
 em0 and a VLAN tag of 1234, by specifying the requested VLAN to be deleted by
 value.
 
 .EXAMPLE
-Get-OpnSenseXMLConfig config.xml | Get-OpnSenseVLAN -Interface em0 -VLANTag 1234 | Remove-OpnSenseVLAN | Out-OpnSenseXMLConfig config.xml
+$c = Get-OpnSenseXMLConfig config.xml; $c | Get-OpnSenseVLAN -Interface em0 -VLANTag 1234 | Remove-OpnSenseVLAN; $c | Out-OpnSenseXMLConfig config.xml
 
 Edit a configuration file and remove a VLAN definition with a parent interface
 em0 and a VLAN tag of 1234, after retrieving the VLAN objects using the
