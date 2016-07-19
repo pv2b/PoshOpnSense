@@ -117,7 +117,7 @@ function Out-OpnSenseXMLConfig {
     # the culture for this to work.
     $CulturalHeritage = [Threading.Thread]::CurrentThread.CurrentCulture
     [Threading.Thread]::CurrentThread.CurrentCulture = "en-US"
-    $r.time = Get-Date -UFormat "%s"
+    [string]$r.time = Get-Date -UFormat "%s"
     [Threading.Thread]::CurrentThread.CurrentCulture = $CulturalHeritage
 
     if ($Description) {
