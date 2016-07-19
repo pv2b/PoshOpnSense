@@ -132,4 +132,5 @@ function Out-OpnSenseXMLConfig {
     $sw = New-Object System.IO.StringWriter
     $ConfigXML.Save($sw)
     Set-Content -Value $sw.ToString() -Path $FilePath
+    $sw.Dispose()
 }
