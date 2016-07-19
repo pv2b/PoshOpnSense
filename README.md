@@ -10,3 +10,8 @@ General functionality/workflow will be:
 - Upload configuration file to the OPNsense box.
 
 I do not aim for complete coverage of all of config.xml, just enough to scratch my own itches. Patches welcome!
+
+# Usage
+
+1. Clone the repository into C:\Users\yourusername\Documents\WindowsPowershell\Modules, such that there is a file named C:\Users\yourusername\Documents\WindowsPowershell\Modules\PoshOpnSense\PoshOpnSense.psd1 (if you prefer it elsewhere on your filesystem, read about how to import modules or set PowerShell's module path.
+2. Open up Powershell and start working with the cmdlets.
