@@ -55,7 +55,7 @@ function Set-OpnSenseVLAN {
 function Get-OpnSenseVLAN {
     [Cmdletbinding()]
     Param(
-        [Parameter(Mandatory=$True)]
+        [Parameter(Mandatory=$True, ValueFromPipeline=$true)]
         [xml]$ConfigXML,
 
         [Parameter(Mandatory=$False)]
