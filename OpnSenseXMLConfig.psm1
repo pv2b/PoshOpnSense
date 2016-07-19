@@ -96,11 +96,11 @@ A string describing the latest revision.
 function Out-OpnSenseXMLConfig {
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory=$True, ValueFromPipeline=$true)]
-        [xml]$ConfigXML,
-
         [Parameter(Mandatory=$True)]
         [string]$FilePath,
+
+        [Parameter(Mandatory=$True, ValueFromPipeline=$true)]
+        [xml]$ConfigXML,
 
         [Parameter(Mandatory=$False)]
         [string]$Description
