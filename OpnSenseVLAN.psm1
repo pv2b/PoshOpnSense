@@ -22,7 +22,7 @@ function New-OpnSenseVLAN {
         # changed in place as a result of executing the cmdlet.
         #
         # An appropriate object can be obtained using Get-OpnSenseXMLConfig.
-        [Parameter(Mandatory=$True)]
+        [Parameter(Mandatory=$True, Position=1)]
         [xml]$ConfigXML,
 
         # The FreeBSD interface name of the physical interface this VLAN runs
@@ -36,13 +36,18 @@ function New-OpnSenseVLAN {
         [int]$VLANTag
     )
 
+    # Refuse to create a duplicate
+    if (Get-OpnSenseVLAN $ConfigXML -Interface $Interface -VLANTag $VLANTag) {
+        Throw "VLAN already exists!"
+    }
+
     $vlan = $ConfigXML.CreateElement("vlan")
     foreach ($elementname in @("if", "tag", "descr", "vlanif")) {
         $child = $ConfigXML.CreateElement($elementname)
         $vlan.AppendChild($child) | Out-Null
     }
     $vlan.if = $Interface
-    $vlan.tag = $VLANTag
+    [string]$vlan.tag = $VLANTag
     $vlan.vlanif = $Interface + "_vlan" + $VLANTag
     return $ConfigXML.SelectSingleNode('/opnsense/vlans').AppendChild($vlan)
 }
@@ -75,14 +80,14 @@ function Set-OpnSenseVLAN {
         # Get-OpnSenseVLAN cmdlet. The element specified will be changed in
         # place as a result of executing the cmdlet, and as a result the DOM
         # containing this element will change.
-        [Parameter(ParameterSetName="ByElement", Mandatory=$True, ValueFromPipeline=$true)]
+        [Parameter(ParameterSetName="ByElement", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
         [System.Xml.XmlElement[]]$XMLElement,
         
         # The DOM of an OPNsense configuration file. The DOM specified will be
         # changed in place as a result of executing the cmdlet.
         #
         # An appropriate object can be obtained using Get-OpnSenseXMLConfig.
-        [Parameter(ParameterSetName="ByValue", Mandatory=$True)]
+        [Parameter(ParameterSetName="ByValue", Mandatory=$True, Position=1)]
         [xml]$ConfigXML,
 
         # The FreeBSD interface name of the physical interface this VLAN runs
@@ -102,7 +107,7 @@ function Set-OpnSenseVLAN {
     )
     Begin {
         if ($PsCmdlet.ParameterSetName -eq "ByValue") {
-            $XMLElement = Get-OpnSenseVLAN -Interface $Interface -VLANTag $VLANTag
+            $XMLElement = Get-OpnSenseVLAN $ConfigXML -Interface $Interface -VLANTag $VLANTag
         }
     }
     Process {
@@ -140,13 +145,9 @@ Get-OpnSenseVLAN -ConfigXML $conf -Interface em0
 
 if  tag  descr      vlanif      
 --  ---  -----      ------      
-em0 10   Binary     em0_vlan10 
-em0 11   Unary      em0_vlan11
-em0 12   Ternary    em0_vlan12
-em0 1234 Sequence   em0_vlan1234
-em0 99   Almost     em0_vlan99
-em0 2345 Seq2       em0_vlan2345
-em0 7    Lucky      em0_vlan7
+em0 10   Apple      em0_vlan10 
+em0 11   Banana     em0_vlan11
+em0 12              em0_vlan12
 
 Retrieve information about all VLANs configured for em0.
 #>
@@ -154,7 +155,7 @@ function Get-OpnSenseVLAN {
     [Cmdletbinding()]
     Param(
         # The DOM of an OPNsense configuration file.
-        [Parameter(Mandatory=$True)]
+        [Parameter(Mandatory=$True, Position=1)]
         [xml]$ConfigXML,
 
         # The FreeBSD interface name of the physical interface this VLAN runs
@@ -215,12 +216,12 @@ function Remove-OpnSenseVLAN {
         # Get-OpnSenseVLAN cmdlet. The element specified will be changed in
         # place as a result of executing the cmdlet, and as a result the DOM
         # containing this element will change.
-        [Parameter(ParameterSetName="ByElement", Mandatory=$True, ValueFromPipeline=$true)]
+        [Parameter(ParameterSetName="ByElement", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
         [System.Xml.XmlElement[]]$XMLElement,
 
         # The DOM of an OPNsense configuration file. The DOM specified will be
         # changed in place as a result of executing the cmdlet.
-        [Parameter(ParameterSetName="ByValue", Mandatory=$True)]
+        [Parameter(ParameterSetName="ByValue", Mandatory=$True, Position=1)]
         [xml]$ConfigXML,
 
         # A string representing the FreeBSD interface name of the underlying
@@ -238,8 +239,9 @@ function Remove-OpnSenseVLAN {
     Begin {
         if ($PsCmdlet.ParameterSetName -eq "ByValue") {
             $XMLElement = Get-OpnSenseVLAN -Config $ConfigXML -Interface $Interface -VLANTag $VLANTag
-        } else {
-            Throw "Could not find VLAN to remove!"
+            if (-not $XMLElement) {
+                Throw "Could not find VLAN to remove!"
+            }
         }
     }
     Process {
