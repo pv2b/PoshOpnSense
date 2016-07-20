@@ -60,8 +60,8 @@ Manipulates an existing VLAN definition in an OPNsense configuration file.
 
 .DESCRIPTION
 
-The Get-OpnSenseVLAN function queries the DOM of an OPNsense XML configuration
-document in order to get information on VLANs matching specified criteria.
+The Set-OpnSenseVLAN function manipulate the DOM of an OPNsense XML configuration
+document in order to set information on VLANs matching specified criteria.
 
 In order to use this function, an object of the xml (System.Xml.XmlDocument)
 type representing an OPNsense configuration is required.
