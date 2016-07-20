@@ -12,13 +12,13 @@ OPNsense configuration file is represented by the supplied DOM.
 
 The function throws an exception if the configuration is invalid.
 
-.PARAMETER XMLConfig
-
-The DOM object representing the OPNsense configuration.
 #>
 
 function Validate-OpnSenseXMLConfig {
-    Param($XMLConfig)
+    Param(
+    # The DOM object representing the OPNsense configuration.
+    $XMLConfig
+    )
     # This is a very lame attempt at checking this. Check to see if there is a
     # schema we can check against (doubtful).
     try {
@@ -48,10 +48,6 @@ file. It performs some cursory checks (see Validate-OpnSenseXMLConfig).
 
 Returns an xml object if the file was valid, otherwise throws an exception.
 
-.PARAMETER FilePath
-
-The path on the filesystem to look for the config file in.
-
 .EXAMPLE
 $ConfigXML = Get-OpnSenseXMLConfig config.xml
 
@@ -61,6 +57,7 @@ argument to other cmdlets in the module.
 function Get-OpnSenseXMLConfig {
     [CmdletBinding()]
     Param(
+    # The path on the filesystem to look for the config file in.
     [string]$FilePath
     )
     [xml]$XMLConfig = Get-Content $FilePath
@@ -79,29 +76,20 @@ The Out-OpnSenseXMLConfig function writes an an OPNsense configuration
 file to disk.
 
 When writing the file, revision data will also be updated.
-
-.PARAMETER ConfigXML
-
-The DOM of an OPNsense configuration file. The DOM specified will be changed
-in place as a result of executing the cmdlet.
-
-.PARAMETER FilePath
-
-The path on the filesystem to write for the config file in.
-
-.PARAMETER Desription
-
-A string describing the latest revision.
 #>
 function Out-OpnSenseXMLConfig {
     [CmdletBinding()]
     Param(
+        # The path on the filesystem to write for the config file in.
         [Parameter(Mandatory=$True)]
         [string]$FilePath,
 
+        # The DOM of an OPNsense configuration file. The DOM specified will be
+        # changed in place as a result of executing the cmdlet.
         [Parameter(Mandatory=$True, ValueFromPipeline=$true)]
         [xml]$ConfigXML,
 
+        # A string describing the latest revision.
         [Parameter(Mandatory=$False)]
         [string]$Description
     )

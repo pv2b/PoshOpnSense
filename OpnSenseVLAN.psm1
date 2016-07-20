@@ -14,25 +14,6 @@ type representing an OPNsense configuration is required. The cmdlet will
 mutate the DOM supplied in order to create a new VLAN configuration with the
 specified settings.
 
-.PARAMETER ConfigXML
-
-The DOM of an OPNsense configuration file. The DOM specified will be changed
-in place as a result of executing the cmdlet.
-
-.PARAMETER Interface
-
-A string representing the interface name of the interface a VLAN is to be
-overlaid on top of. This is to be given as a FreeBSD interface name (as
-seen in /sbin/ifconfig)
-
-.PARAMETER VLANTag
-
-An integer (between 1 and 4094) representing the VLAN ID to use.
-
-.PARAMETER Description
-
-A string containing a "friendly description" of the VLAN in question.
-
 .EXAMPLE
 $c = Get-OpnSenseXMLConfig config.xml; $c | New-OpnSenseVLAN -Interface em0 -VLANTag 1234; $c | Out-OpnSenseXMLConfig config.xml
 
@@ -42,16 +23,23 @@ em0 and a VLAN tag of 1234.
 function New-OpnSenseVLAN {
     [Cmdletbinding()]
     Param(
+        # The DOM of an OPNsense configuration file. The DOM specified will be
+        # changed in place as a result of executing the cmdlet.
         [Parameter(Mandatory=$True, ValueFromPipeline=$true)]
         [xml]$ConfigXML,
 
+        # A string representing the interface name of the interface a VLAN is
+        # to be overlaid on top of. This is to be given as a FreeBSD interface
+        # name (as seen in /sbin/ifconfig)
         [Parameter(Mandatory=$True)]
         [string]$Interface,
 
+        # An integer (between 1 and 4094) representing the VLAN ID to use.
         [Parameter(Mandatory=$True)]
         [ValidateRange(1,4094)]
         [int]$VLANTag,
 
+        # A string containing a "friendly description" of the VLAN in question.
         [Parameter(Mandatory=$False)]
         [string]$Description
     )
@@ -78,28 +66,6 @@ document in order to get information on VLANs matching specified criteria.
 In order to use this function, an object of the xml (System.Xml.XmlDocument)
 type representing an OPNsense configuration is required.
 
-.PARAMETER XMLElement
-
-An System.Xml.XmlElement object from an OPNsense configuration file
-representing a VLAN. Such an object is returned by the Get-OpnSenseVLAN
-cmdlet. The element specified will be changed in place as a result of
-executing the cmdlet, and as a result the DOM containing this element will
-change.
-
-.PARAMETER Interface
-
-A string representing the interface name of the interface a VLAN is to be
-overlaid on top of. This is to be given as a FreeBSD interface name (as
-seen in /sbin/ifconfig)
-
-.PARAMETER VLANTag
-
-An integer (between 1 and 4094) representing the VLAN ID to use.
-
-.PARAMETER Description
-
-A string containing a "friendly description" of the VLAN in question.
-
 .NOTES
 
 This cmdlet will not update any interface assignments or other configuration
@@ -115,16 +81,27 @@ on interface em0.
 function Set-OpnSenseVLAN {
     [Cmdletbinding()]
     Param(
+        # An System.Xml.XmlElement object from an OPNsense configuration file
+        # representing a VLAN. Such an object is returned by the
+        # Get-OpnSenseVLAN cmdlet. The element specified will be changed in
+        # place as a result of executing the cmdlet, and as a result the DOM
+        # containing this element will change.
         [Parameter(Mandatory=$True, ValueFromPipeline=$true)]
         [System.Xml.XmlElement]$XMLElement,
 
+        # A string representing the interface name of the interface a VLAN is
+        # to be overlaid on top of. This is to be given as a FreeBSD interface
+        # name (as seen in /sbin/ifconfig)
         [Parameter(Mandatory=$True)]
         [string]$Interface,
 
+        # An integer (between 1 and 4094) representing the VLAN ID to use.
         [Parameter(Mandatory=$True)]
         [ValidateRange(1,4094)]
         [int]$VLANTag,
 
+        # A string containing a "friendly description" of the VLAN in
+        # question.
         [Parameter(Mandatory=$False)]
         [string]$Description
     )
@@ -163,25 +140,6 @@ An object of type System.Xml.XmlElement is returned, representing the
 requested information. The cmdlet makes no attempt at interpreting the
 data, instead opting to present it as is from the configuration DOM.
 
-.PARAMETER ConfigXML
-
-The DOM of an OPNsense configuration file.
-
-.PARAMETER Interface
-
-A string representing the interface name of the interface to retrieve VLAN
-information for. This is to be given as a FreeBSD interface name (as seen
-in /sbin/ifconfig)
-
-If unspecified, matches all interfaces.
-
-.PARAMETER VLANTag
-
-An integer (between 1 and 4094) representing the VLAN ID to retrieve
-VLAN information for.
-
-If unspecified, matches all VLAN tags.
-
 .EXAMPLE
 Get-OpnSenseXMLConfig config.xml | Get-OpnSenseVLAN -Interface em0
 
@@ -200,12 +158,23 @@ Retrieve information about all VLANs configured for em0.
 function Get-OpnSenseVLAN {
     [Cmdletbinding()]
     Param(
+        # The DOM of an OPNsense configuration file.
         [Parameter(Mandatory=$True, ValueFromPipeline=$true)]
         [xml]$ConfigXML,
 
+        # A string representing the interface name of the interface to
+        # retrieve VLAN information for. This is to be given as a FreeBSD
+        # interface name (as seen in /sbin/ifconfig)
+        #
+        # If unspecified, matches all interfaces.
         [Parameter(Mandatory=$False)]
         [string]$Interface,
 
+
+        # An integer (between 1 and 4094) representing the VLAN ID to retrieve
+        # VLAN information for.
+        # 
+        # If unspecified, matches all VLAN tags.
         [Parameter(Mandatory=$False)]
         [ValidateRange(1,4094)]
         [int]$VLANTag
@@ -245,31 +214,6 @@ Both the Interface and VLANTag arguments are optional. If neither are
 specified, and the ConfigXML parameter is used, this will therefore delete all
 VLANs.
 
-.PARAMETER ConfigXML
-
-The DOM of an OPNsense configuration file. The DOM specified will be changed
-in place as a result of executing the cmdlet.
-
-.PARAMETER Interface
-
-A string representing the interface name of the interface to remove VLAN
-configuration for. This is to be given as a FreeBSD interface name (as seen
-in /sbin/ifconfig)
-
-If unspecified, matches all interfaces.
-
-.PARAMETER VLANTag
-
-An integer (between 1 and 4094) representing the VLAN ID to remove VLAN
-configuration for.
-
-If unspecified, matches all VLAN tags.
-
-.PARAMETER XMLElement
-
-A System.Xml.XmlElement object referring to the VLAN, as provided by the
-Get-OpnSenseVLAN cmdlet.
-
 .EXAMPLE
 $c = Get-OpnSenseXMLConfig config.xml; $c | Remove-OpnSenseVLAN -Interface em0 -VLANTag 1234; $c | Out-OpnSenseXMLConfig config.xml
 
@@ -287,16 +231,29 @@ Get-OpnSenseVLAN cmdlet.
 function Remove-OpnSenseVLAN {
     [Cmdletbinding()]
     Param(
+        # The DOM of an OPNsense configuration file. The DOM specified will be
+        # changed in place as a result of executing the cmdlet.
         [Parameter(ParameterSetName="ByValues", Mandatory=$True, ValueFromPipeline=$true)]
         [xml]$ConfigXML,
 
+        # A string representing the interface name of the interface to remove
+        # VLAN configuration for. This is to be given as a FreeBSD interface
+        # name (as seen in /sbin/ifconfig)
+        #
+        # If unspecified, matches all interfaces.
         [Parameter(ParameterSetName="ByValues", Mandatory=$False)]
         [string]$Interface,
 
+        # An integer (between 1 and 4094) representing the VLAN ID to remove
+        # VLAN configuration for.
+        #
+        # If unspecified, matches all VLAN tags.
         [Parameter(ParameterSetName="ByValues", Mandatory=$False)]
         [ValidateRange(1,4094)]
         [int]$VLANTag,
 
+        # A System.Xml.XmlElement object referring to the VLAN, as provided by
+        # the Get-OpnSenseVLAN cmdlet.
         [Parameter(ParameterSetName="ByXMLElement", Mandatory=$True, ValueFromPipeline=$true)]
         [System.Xml.XmlElement]$XMLElement
     )
