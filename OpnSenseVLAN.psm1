@@ -106,16 +106,16 @@ function Set-OpnSenseVLAN {
         [string]$Description
     )
     if ($Interface) {
-        $vlan.if = $Interface
+        $XMLElement.if = $Interface
     }
     if ($VLANTag) {
-        [string]$vlan.tag = $VLANTag
+        [string]$XMLElement.tag = $VLANTag
     }
     if ($Description) {
-        $vlan.descr = $Description
+        $XMLElement.descr = $Description
     }
-    $vlan.vlanif = $vlan.if+"_vlan"+$vlan.tag
-    $vlan
+    $XMLElement.vlanif = $vlan.if+"_vlan"+$vlan.tag
+    $XMLElement
 }
 
 <#
