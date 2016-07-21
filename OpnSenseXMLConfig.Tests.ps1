@@ -19,24 +19,29 @@ Describe 'Get-OpnSenseXMLConfig' {
     It 'Reads a configuration file from disk' {
         $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
         # Basic sanity check of read data
-        $conf.version | Should Be "11.2"
-        $conf.revision | Should Not Be $null
+        $conf.opnsense.version | Should Be "11.2"
+        $conf.opnsense.revision | Should Not Be $null
     }
 }
 
 Describe 'Out-OpnSenseXMLConfig' {
+    $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
     It 'Overwriting existing file' {
+        $oldtime = $conf.opnsense.revision.time
         Out-OpnSenseXMLConfig -FilePath $ConfigPath -ConfigXML $conf -Description "Unit testing 1"
-        $conf2 = Get-OpnSenseVLAN -ConfigXML $ConfigPath
+        $conf2 = Get-OpnSenseXMLConfig -FilePath $ConfigPath
+        $conf2.opnsense.revision.time | Should Not Be $oldtime
         $conf2 | Should Not Be $conf
-        $conf2.revision.desc | Should Be "Unit Testing 1"
+        $conf2.opnsense.revision.description | Should Be "Unit Testing 1"
     }
-    Is 'Creating newfile' {
+    It 'Creating new file' {
         Remove-Item $ConfigPath
+        $oldtime = $conf.opnsense.revision.time
         Out-OpnSenseXMLConfig -FilePath $ConfigPath -ConfigXML $conf -Description "Unit testing 2"
-        $conf2 = Get-OpnSenseVLAN -ConfigXML $ConfigPath
+        $conf2 = Get-OpnSenseXMLConfig -FilePath $ConfigPath
+        $conf2.opnsense.revision.time | Should Not Be $oldtime
         $conf2 | Should Not Be $conf
-        $conf2.revision.desc | Should Be "Unit Testing 2"
+        $conf2.opnsense.revision.description | Should Be "Unit Testing 2"
     }
 }
 
