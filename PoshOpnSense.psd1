@@ -63,7 +63,7 @@ Copyright = '(c) 2016 pvz. All rights reserved.'
 # FormatsToProcess = @()
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-NestedModules = @('OpnSenseXMLConfig.psm1', 'OpnSenseVLAN.psm1')
+NestedModules = @('OpnSenseXMLConfig.psm1', 'OpnSenseVLAN.psm1', 'OpnSenseInterface.psm1')
 
 # Functions to export from this module
 FunctionsToExport = @( `
@@ -75,6 +75,11 @@ FunctionsToExport = @( `
     'Set-OpnSenseVLAN',
     'Get-OpnSenseVLAN',
     'Remove-OpnSenseVLAN'
+    # OpnSenseInterface.psm1
+    'New-OpnSenseInterface',
+    'Set-OpnSenseInterface',
+    'Get-OpnSenseInterface',
+    'Remove-OpnSenseInterface'
 )
 
 # Cmdlets to export from this module
