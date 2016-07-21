@@ -1,5 +1,5 @@
 ﻿# Force the module to be reloaded for testing...
-Import-Module -Force PoshOpnSense
+Import-Module -ErrorAction Stop -Force PoshOpnSense
 
 $ConfigPath = [System.IO.Path]::GetTempFileName()
 Set-Content $ConfigPath -Value @"
@@ -56,6 +56,28 @@ Describe 'Get-OpnSenseVLAN' {
         foreach ($r in $result) {
             $r.vlanif | Should Be ($r.if + "_vlan" + $r.tag)
         }
+    }
+
+    It 'Has handy script properties' {
+        Get-OpnSenseVLAN $conf | % {
+            $conf.Interface | Should Be $conf.if
+            $conf.VLANTag | Should Be $conf.tag
+            $conf.Description | Should Be $conf.descr
+        }
+    }
+
+    $vlan = Get-OpnSenseVLAN $conf | Select -First 1
+    # This might be subject to change.
+    It "Doesn't allow these script properties to be set" {
+        { $vlan.Interface = 'asdf' } | Should Throw
+        { $vlan.VLANTag = 'asdf' } | Should Throw
+        { $vlan.Description = 'asdf' } | Should Throw
+    }
+
+    It 'Always reflects the same data in these friendly properties' {
+        $vlan.descr | Should not be 'asdf'
+        $vlan.descr = 'asdf'
+        $vlan.Description | Should be $vlan.descr
     }
 
     It 'Filters on Interface Only' {

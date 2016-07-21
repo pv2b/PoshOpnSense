@@ -187,7 +187,23 @@ function Get-OpnSenseVLAN {
         }
         $XMLElement = $ConfigXML.SelectNodes($xpath)
     }
+    $defaultProperties = @('Interface', 'VLANTag', ’Description')
+    $defaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultProperties)
+    $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($defaultDisplayPropertySet)
     $XMLElement | % {
+        try {
+            $_ | Add-Member -ErrorAction Stop ScriptProperty Interface { $this.if }
+            $_ | Add-Member -ErrorAction Stop ScriptProperty VLANTag { $this.tag }
+            $_ | Add-Member -ErrorAction Stop ScriptProperty Description { $this.descr }
+            $_ | Add-Member -ErrorAction Stop MemberSet PSStandardMembers $PSStandardMembers
+
+        } catch {
+            # Ignore any errors in the Add-Members. They will happen if an
+            # XMLElement has been worked on already at an earlier stage, in
+            # which case, adding the ScriptProperties will be redundant.
+        }
+
+
         $_
     }
 }
