@@ -81,7 +81,7 @@ function Set-OpnSenseVLAN {
         # Get-OpnSenseVLAN cmdlet. The element specified will be changed in
         # place as a result of executing the cmdlet, and as a result the DOM
         # containing this element will change.
-        [Parameter(ParameterSetName="ByElement", Mandatory=$True, ValueFromPipelineByPropertyName=$true, Position=1)]
+        [Parameter(ParameterSetName="ByElement", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
         [System.Xml.XmlElement[]]$XMLElement,
         
         # The DOM of an OPNsense configuration file. The DOM specified will be
@@ -108,7 +108,7 @@ function Set-OpnSenseVLAN {
     )
     Begin {
         if ($PsCmdlet.ParameterSetName -eq "ByValue") {
-            $XMLElement = (Get-OpnSenseVLAN $ConfigXML -Interface $Interface -VLANTag $VLANTag).XMLElement
+            $XMLElement = Get-OpnSenseVLAN $ConfigXML -Interface $Interface -VLANTag $VLANTag
         }
     }
     Process {
@@ -157,7 +157,7 @@ function Get-OpnSenseVLAN {
     Param(
         # A System.Xml.XmlElement object from an OPNsense configuration file
         # representing a VLAN.
-        [Parameter(ParameterSetName="ByElement", Mandatory=$True, ValueFromPipelineByPropertyName=$true)]
+        [Parameter(ParameterSetName="ByElement", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
         [System.Xml.XmlElement[]]$XMLElement,
 
         # The DOM of an OPNsense configuration file.
@@ -188,13 +188,7 @@ function Get-OpnSenseVLAN {
         $XMLElement = $ConfigXML.SelectNodes($xpath)
     }
     $XMLElement | % {
-        $obj = New-Object PSObject
-        $obj | Add-Member XMLElement $_
-        $obj | Add-Member Interface $_.if
-        $obj | Add-Member VLANTag $_.tag
-        $obj | Add-Member VLANInterface $_.vlanif
-        $obj | Add-Member Description $_.descr
-        $obj
+        $_
     }
 }
 
@@ -232,7 +226,7 @@ function Remove-OpnSenseVLAN {
         # Get-OpnSenseVLAN cmdlet. The element specified will be changed in
         # place as a result of executing the cmdlet, and as a result the DOM
         # containing this element will change.
-        [Parameter(ParameterSetName="ByElement", Mandatory=$True, ValueFromPipelineByPropertyName=$true, Position=1)]
+        [Parameter(ParameterSetName="ByElement", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
         [System.Xml.XmlElement[]]$XMLElement,
 
         # The DOM of an OPNsense configuration file. The DOM specified will be
@@ -254,7 +248,7 @@ function Remove-OpnSenseVLAN {
     )
     Begin {
         if ($PsCmdlet.ParameterSetName -eq "ByValue") {
-            $XMLElement = (Get-OpnSenseVLAN -Config $ConfigXML -Interface $Interface -VLANTag $VLANTag).XMLElement
+            $XMLElement = Get-OpnSenseVLAN -Config $ConfigXML -Interface $Interface -VLANTag $VLANTag
             if (-not $XMLElement) {
                 Throw "Could not find VLAN to remove!"
             }
