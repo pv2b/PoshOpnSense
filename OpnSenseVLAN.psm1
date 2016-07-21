@@ -144,11 +144,12 @@ data, instead opting to present it as is from the configuration DOM.
 
 Get-OpnSenseVLAN -ConfigXML $conf -Interface em0
 
-if  tag  descr      vlanif      
---  ---  -----      ------      
-em0 10   Apple      em0_vlan10 
-em0 11   Banana     em0_vlan11
-em0 12              em0_vlan12
+Interface VLANTag Description
+--------- ------- -----------
+em0       10      Apple
+em0       11      Banana
+em0       12
+em1       10      Cheesecake
 
 Retrieve information about all VLANs configured for em0.
 #>
@@ -196,14 +197,11 @@ function Get-OpnSenseVLAN {
             $_ | Add-Member -ErrorAction Stop ScriptProperty VLANTag { $this.tag }
             $_ | Add-Member -ErrorAction Stop ScriptProperty Description { $this.descr }
             $_ | Add-Member -ErrorAction Stop MemberSet PSStandardMembers $PSStandardMembers
-
         } catch {
             # Ignore any errors in the Add-Members. They will happen if an
             # XMLElement has been worked on already at an earlier stage, in
             # which case, adding the ScriptProperties will be redundant.
         }
-
-
         $_
     }
 }
