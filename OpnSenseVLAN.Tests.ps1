@@ -60,9 +60,9 @@ Describe 'Get-OpnSenseVLAN' {
 
     It 'Has handy script properties' {
         Get-OpnSenseVLAN $conf | % {
-            $conf.Interface | Should Be $conf.if
-            $conf.VLANTag | Should Be $conf.tag
-            $conf.Description | Should Be $conf.descr
+            $_.Interface | Should Be $_.if
+            $_.VLANTag | Should Be $_.tag
+            $_.Description | Should Be $_.descr
         }
     }
 
