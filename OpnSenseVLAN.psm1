@@ -49,7 +49,8 @@ function New-OpnSenseVLAN {
     $vlan.if = $Interface
     [string]$vlan.tag = $VLANTag
     $vlan.vlanif = $Interface + "_vlan" + $VLANTag
-    return $ConfigXML.SelectSingleNode('/opnsense/vlans').AppendChild($vlan)
+    $XMLElement = $ConfigXML.SelectSingleNode('/opnsense/vlans').AppendChild($vlan)
+    Get-OpnSenseVLAN -XMLElement $XMLElement
 }
 
 <#
@@ -115,7 +116,7 @@ function Set-OpnSenseVLAN {
             if ($Description) {
                 $_.descr = $Description
             }
-            $_
+            Get-OpnSenseVLAN -XMLElement $_
         }
     }
 }
@@ -154,32 +155,41 @@ Retrieve information about all VLANs configured for em0.
 function Get-OpnSenseVLAN {
     [Cmdletbinding()]
     Param(
+        # A System.Xml.XmlElement object from an OPNsense configuration file
+        # representing a VLAN.
+        [Parameter(ParameterSetName="ByElement", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
+        [System.Xml.XmlElement[]]$XMLElement,
+
         # The DOM of an OPNsense configuration file.
-        [Parameter(Mandatory=$True, Position=1)]
+        [Parameter(ParameterSetName="ByValue", Mandatory=$True, Position=1)]
         [xml]$ConfigXML,
 
         # The FreeBSD interface name of the physical interface this VLAN runs
         # on top of.
-        [Parameter(Mandatory=$False)]
+        [Parameter(ParameterSetName="ByValue", Mandatory=$False)]
         [ValidatePattern("^[a-z0-9]*$")]
         [string]$Interface,
 
         # The VLAN ID of the VLAN. (Must be between 1 and 4094.)
-        [Parameter(Mandatory=$False)]
+        [Parameter(ParameterSetName="ByValue", Mandatory=$False)]
         [ValidateRange(1,4094)]
         [int]$VLANTag
     )
-
-    $xpath = '/opnsense/vlans/vlan'
-    if ($Interface) {
-        # Safe because $Interface is guaranteed only to contain safe characters.
-        $xpath += "[if='$Interface']"
+    if ($PsCmdlet.ParameterSetName -eq "ByValue") {
+        $xpath = '/opnsense/vlans/vlan'
+        if ($Interface) {
+            # Safe because $Interface is guaranteed only to contain safe characters.
+            $xpath += "[if='$Interface']"
+        }
+        if ($VLANTag) {
+            # Safe because $VLANTag is guaranteed to be an integer.
+            $xpath += "[tag='$VLANTag']"
+        }
+        $XMLElement = $ConfigXML.SelectNodes($xpath)
     }
-    if ($VLANTag) {
-        # Safe because $VLANTag is guaranteed to be an integer.
-        $xpath += "[tag='$VLANTag']"
+    $XMLElement | % {
+        $_
     }
-    return $ConfigXML.SelectNodes($xpath)
 }
 
 <#
