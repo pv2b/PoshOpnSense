@@ -110,6 +110,11 @@ Describe 'Get-OpnSenseInterface' {
         { Get-OpnSenseInterface $conf -Name "" } | Should Throw
         { Get-OpnSenseInterface $conf -Name "pnyxtr" } | Should Throw
     }
+
+    It 'Can be given an XML Element as a paramter (useful to add its ScriptProperties if neccessary)' {
+        $if = Get-OpnSenseInterface $conf "wan"
+        Get-OpnSenseInterface $if | should be $if
+    }
 }
 
 Describe 'New-OpnSenseInterface' {
@@ -117,7 +122,8 @@ Describe 'New-OpnSenseInterface' {
         # Random capital letter in the name to test that value is properly folded to lowercase
         $result = New-OpnSenseInterface $conf -Name "oPt11" -Interface "em2" -Description "test1"
         $result.GetType().Name | Should Be "XmlElement"
-        $result.Name | Should Be "opt11"
+        # Make sure value is folder to lowercase here!
+        $result.Name | Should BeExactly "opt11"
         $result.Interface | Should Be "em2"
         $result.Description | Should Be "test1"
         Get-OpnSenseInterface $conf "opt11" | Should Be $result

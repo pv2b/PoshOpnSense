@@ -51,6 +51,8 @@ function New-OpnSenseInterface {
             $Name = "opt$i"
             $i++
         } while (-not (Get-OpnSenseInterface -Name $Name))
+    } else {
+        $Name = $Name.ToLower()
     }
     $if = $ConfigXML.CreateElement($Name)
     foreach ($elementname in @("descr", "if", "enable", "spoofmac")) {
@@ -107,7 +109,7 @@ function Set-OpnSenseInterface {
     if ($Description) {
         $XMLElement.descr = $Description
     }
-    $XMLElement
+    Get-OpnSenseInterface $XMLElement
 }
 
 <#
@@ -149,14 +151,17 @@ function Get-OpnSenseInterface {
     [Cmdletbinding()]
     Param(
         # The DOM of an OPNsense configuration file.
-        [Parameter(Mandatory=$True, ValueFromPipeline=$true)]
+        [Parameter(ParameterSetName="ByValue", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
         [xml]$ConfigXML,
 
         # A string representing the OPNsense interface name. Must be wan, lan,
         # or opt\d+. If not given, the first available opt interface is used.
-        [Parameter(Mandatory=$False)]
+        [Parameter(ParameterSetName="ByValue", Mandatory=$False, Position=2)]
         [ValidatePattern("^(wan|lan|opt\d+)$")]
-        [string]$Name
+        [string]$Name,
+
+        [Parameter(ParameterSetName="ByElement", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
+        [System.Xml.XmlElement[]]$XMLElement
     )
 
     if ($Name) {
@@ -165,10 +170,13 @@ function Get-OpnSenseInterface {
     } else {
         $xpath = "/opnsense/interfaces/*"
     }
-   $defaultProperties = @('Name', 'Interface', 'Description', ’IPAddress', 'IPv6Address', 'Enabled')
-   $defaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultProperties)
-   $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($defaultDisplayPropertySet)
-   $ConfigXML.SelectNodes($xpath) | % {
+    $defaultProperties = @('Name', 'Interface', 'Description', ’IPAddress', 'IPv6Address', 'Enabled')
+    $defaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultProperties)
+    $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($defaultDisplayPropertySet)
+    if ($PsCmdlet.ParameterSetName -eq "ByValue") {
+        $XMLElement = $ConfigXML.SelectNodes($xpath)
+    }
+    $XMLElement | % {
         try {
             $_ | Add-Member -ErrorAction Stop ScriptProperty Interface { $this.if }
             $_ | Add-Member -ErrorAction Stop ScriptProperty Description { $this.descr }
