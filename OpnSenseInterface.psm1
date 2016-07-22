@@ -136,15 +136,12 @@ data, instead opting to present it as is from the configuration DOM.
 Get-OpnSenseXMLConfig config.xml | Get-OpnSenseInterface -Interface em0
 
 
-if          : em0
-descr       : AwesomeNet
-enable      : 1
-spoofmac    :
-blockbogons : 1
-ipaddr      : 192.0.2.1
-subnet      : 24
-ipaddrv6    : 2001:db8:e1e:e7::1
-subnetv6    : 64
+Name        : opt10
+Interface   : em0
+Description : GUEST
+IPAddress   : 192.0.2.1
+IPv6Address : 2001:db8:1561:a::1
+Enabled     : True
 
 Retrieve information about the interface named em0.
 #>
@@ -167,10 +164,12 @@ function Get-OpnSenseInterface {
     } else {
         $xpath = "/opnsense/interfaces/*"
     }
-    $ConfigXML.SelectNodes($xpath) | % {
+   $defaultProperties = @('Name', 'Interface', 'Description', ’IPAddress', 'IPv6Address', 'Enabled')
+   $defaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultProperties)
+   $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($defaultDisplayPropertySet)
+   $ConfigXML.SelectNodes($xpath) | % {
         try {
             $_ | Add-Member -ErrorAction Stop ScriptProperty Interface { $this.if }
-            $_ | Add-Member -ErrorAction Stop ScriptProperty VLANTag { $this.tag }
             $_ | Add-Member -ErrorAction Stop ScriptProperty Description { $this.descr }
             $_ | Add-Member -ErrorAction Stop ScriptProperty Enabled { [bool]$this.enable }
             $_ | Add-Member -ErrorAction Stop ScriptProperty IPAddress { [ipaddress]$this.ipaddr }
