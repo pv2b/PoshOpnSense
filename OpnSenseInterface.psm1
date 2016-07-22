@@ -177,8 +177,9 @@ function Get-OpnSenseInterface {
             $_ | Add-Member -ErrorAction Stop ScriptProperty IPv6Address { [ipaddress]$this.ipaddrv6 }
             $_ | Add-Member -ErrorAction Stop ScriptProperty IPPrefixLength { [int]$this.subnet }
             $_ | Add-Member -ErrorAction Stop ScriptProperty IPv6PrefixLength { [int]$this.subnetv6 }
-            $_ | Add-Member -ErrorAction Stop ScriptProperty BlockBogons { [bool]$this.blockbogons }
+            $_ | Add-Member -Force -ErrorAction Stop ScriptProperty BlockBogons { [bool]$this['blockbogons'] }
             $_ | Add-Member -ErrorAction Stop ScriptProperty BlockRFC1918 { [bool]$this.blockpriv }
+            $_ | Add-Member -Force -ErrorAction Stop ScriptProperty SpoofMac { [bool]$this['spoofmac'] }
 
             $_ | Add-Member -ErrorAction Stop MemberSet PSStandardMembers $PSStandardMembers
         } catch {

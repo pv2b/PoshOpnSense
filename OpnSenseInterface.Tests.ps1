@@ -65,7 +65,7 @@ Describe 'Get-OpnSenseInterface' {
             $_.IPPrefixLength   | Should Be ([int]$_.subnet)
             $_.IPv6PrefixLength | Should Be ([int]$_.subnetv6)
             $_.BlockBogons      | Should Be ([bool]$_.blockbogons)
-            #$_.BlockRFC1918     | Should Be ([bool]$_.blockpriv)
+            $_.BlockRFC1918     | Should Be ([bool]$_.blockpriv)
         }
     }
 
@@ -87,7 +87,7 @@ Describe 'Get-OpnSenseInterface' {
     It 'Always reflects the same data in these friendly properties' {
         $interface.descr | Should not be 'asdf'
         $interface.descr = 'asdf'
-        $interface.Description | Should be $vlan.descr
+        $interface.Description | Should be $interface.descr
     }
 <#
     It 'Filters on Interface Only' {
