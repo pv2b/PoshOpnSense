@@ -93,13 +93,24 @@ the em0 interface.
 function Set-OpnSenseInterface {
     [Cmdletbinding()]
     Param(
+        # The DOM of an OPNsense configuration file. The DOM specified will be
+        # changed in place as a result of executing the cmdlet.
+        [Parameter(ParameterSetName="ByValue", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
+        [xml]$ConfigXML,
+
+        # A string representing the OPNsense interface name. Must be wan, lan,
+        # or opt\d+.
+        [Parameter(ParameterSetName="ByValue", Mandatory=$False)]
+        [ValidatePattern("^(wan|lan|opt\d+)$")]
+        [string]$Name,
+
         # An System.Xml.XmlElement object from an OPNsense configuration file
         # representing a interface. Such an object is returned by the
         # Get-OpnSenseInterface cmdlet. The element specified will be changed in
         # place as a result of executing the cmdlet, and as a result the DOM
         # containing this element will change.
-        [Parameter(Mandatory=$True, ValueFromPipeline=$true)]
-        [System.Xml.XmlElement]$XMLElement,
+        [Parameter(ParameterSetName="ByElement", Mandatory=$True, ValueFromPipeline=$true)]
+        [System.Xml.XmlElement[]]$XMLElement,
 
         # A string representing the FreeBSD interface name
         # (as seen in /sbin/ifconfig)
@@ -110,13 +121,25 @@ function Set-OpnSenseInterface {
         [Parameter(Mandatory=$False)]
         [string]$Description
     )
-    if ($Interface) {
-        $XMLElement.if = $Interface
+    Begin {
+        if ($PsCmdlet.ParameterSetName -eq "ByValue") {
+            $XMLElement = Get-OpnSenseInterface $ConfigXML $Name
+        }
     }
-    if ($Description) {
-        $XMLElement.descr = $Description
+    Process {
+        $XMLElement | % {
+            if ($PsCmdlet.ParameterSetName -eq "ByElement") {
+                $XMLElement = Get-OpnSenseInterface $XMLElement
+            }
+            if ($Interface) {
+                $_.if = $Interface
+            }
+            if ($Description) {
+                $_.descr = $Description
+            }
+            $_
+        }
     }
-    Get-OpnSenseInterface $XMLElement
 }
 
 <#

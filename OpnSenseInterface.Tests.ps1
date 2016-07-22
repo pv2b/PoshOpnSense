@@ -147,41 +147,41 @@ Describe 'New-OpnSenseInterface' {
         $if.Description | Should Be $if.Name.ToUpper()
     }
 }
-<#
-Describe 'Set-OpnSenseVLAN' {
-    It 'Sets a description of a single VLAN by value' {
-        (Get-OpnSenseVLAN $conf -Interface em0 -VLANTag 10).descr | Should Not Be "test1"
-        Set-OpnSenseVLAN $conf -Interface em0 -VLANTag 10 -Description "test1"
-        (Get-OpnSenseVLAN $conf -Interface em0 -VLANTag 10).descr | Should Be "test1"
+
+Describe 'Set-OpnSenseInterface' {
+    It 'Sets a description of an interface by name' {
+        (Get-OpnSenseInterface $conf -Name WaN).descr | Should Not Be "test1"
+        Set-OpnSenseInterface $conf -Name wan -Description "test1"
+        (Get-OpnSenseInterface $conf -Name WAN).descr | Should Be "test1"
     }
-    It 'Sets a description of a single VLAN by pipeline' {
-        $vlan = Get-OpnSenseVLAN $conf -Interface em0 -VLANTag 10
-        $vlan.descr | Should Not Be "test2"
-        $vlan | Set-OpnSenseVLAN -Description "test2"
-        $vlan.descr | Should Be "test2"
+    It 'Sets a description of a single interface by pipeline' {
+        $if = Get-OpnSenseInterface $conf -Name wan
+        $if.descr | Should Not Be "test2"
+        $if | Set-OpnSenseInterface -Description "test2"
+        $if.descr | Should Be "test2"
     }
-    It 'Sets a description of a single VLAN by argument' {
-        $vlan = Get-OpnSenseVLAN $conf -Interface em0 -VLANTag 10
-        $vlan.descr | Should Not Be "test3"
-        Set-OpnSenseVLAN -XMLElement $vlan -Description "test3"
-        $vlan.descr | Should Be "test3"
+    It 'Sets a description of a single interface by argument' {
+        $if = Get-OpnSenseInterface $conf -Name Wan
+        $if.descr | Should Not Be "test3"
+        Set-OpnSenseInterface -XMLElement $if -Description "test3"
+        $if.descr | Should Be "test3"
     }
-    It 'Sets a description of a multiple VLANs by pipeline' {
-        $vlan = Get-OpnSenseVLAN $conf -Interface em0
-        $vlan.Count -gt 1 | Should Be True
-        $vlan | % { $_.descr | Should Not Be "test4" }
-        $vlan | Set-OpnSenseVLAN -Description "test4"
-        $vlan | % { $_.descr | Should Be "test4" }
+    It 'Sets a description of a multiple interfaces by pipeline' {
+        $if = Get-OpnSenseInterface $conf
+        $if.Count -gt 1 | Should Be True
+        $if | % { $_.Description | Should Not Be "test4" }
+        $if | Set-OpnSenseInterface -Description "test4"
+        $if | % { $_.Description | Should Be "test4" }
     }
-    It 'Sets a description of a multiple VLANs by argument' {
-        $vlan = Get-OpnSenseVLAN $conf -Interface em0
-        $vlan.Count -gt 1 | Should Be True
-        $vlan | % { $_.descr | Should Not Be "test5" }
-        Set-OpnSenseVLAN -XMLElement $vlan -Description "test5"
-        $vlan | % { $_.descr | Should Be "test5" }
+    It 'Sets a description of a multiple interfaces by argument' {
+        $if = Get-OpnSenseInterface $conf
+        $if.Count -gt 1 | Should Be True
+        $if | % { $_.Description | Should Not Be "test5" }
+        Set-OpnSenseInterface -XMLElement $if -Description "test5"
+        $if | % { $_.Description | Should Be "test5" }
     }
 }
-
+<#
 Describe 'Remove-OpnSenseVLAN' {
     It 'Removes a single VLAN by value' {
         $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
