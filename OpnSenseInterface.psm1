@@ -53,6 +53,10 @@ function New-OpnSenseInterface {
         } while (-not (Get-OpnSenseInterface -Name $Name))
     } else {
         $Name = $Name.ToLower()
+        # Refuse to create a duplicate
+        if (Get-OpnSenseInterface $ConfigXML -Name $Name) {
+            Throw "Interface already exists!"
+        }
     }
     $if = $ConfigXML.CreateElement($Name)
     foreach ($elementname in @("descr", "if", "enable", "spoofmac")) {
