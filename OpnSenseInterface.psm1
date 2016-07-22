@@ -31,7 +31,7 @@ function New-OpnSenseInterface {
         # A string representing the OPNsense interface name. Must be wan, lan,
         # or opt\d+. If not given, the first available opt interface is used.
         [Parameter(Mandatory=$False)]
-        [ValidatePattern("^(wan|lan|opt\d+)$)]")]
+        [ValidatePattern("^(wan|lan|opt\d+)$")]
         [string]$Name,
 
         # A string representing the FreeBSD interface name
@@ -57,7 +57,7 @@ function New-OpnSenseInterface {
         $child = $ConfigXML.CreateElement($elementname)
         $if.AppendChild($child) | Out-Null
     }
-    $ConfigXML.SelectSingleNode('/opnsense/interfaces').AppendChild($interface) | Set-OpnSenseInterface -Interface $Interface -Description $Description
+    $ConfigXML.SelectSingleNode('/opnsense/interfaces').AppendChild($if) | Set-OpnSenseInterface -Interface $Interface -Description $Description
 }
 
 <#

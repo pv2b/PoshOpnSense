@@ -112,22 +112,23 @@ Describe 'Get-OpnSenseInterface' {
     }
 }
 
-<#
-Describe 'New-OpnSenseVLAN' {
-    It 'Adds a new VLAN' {
-        $result = New-OpnSenseVLAN $conf -Interface "em2" -VLANTag 1234
+Describe 'New-OpnSenseInterface' {
+    It 'Adds a new Interface' {
+        # Random capital letter in the name to test that value is properly folded to lowercase
+        $result = New-OpnSenseInterface $conf -Name "oPt11" -Interface "em2" -Description "test1"
         $result.GetType().Name | Should Be "XmlElement"
-        $result.if | Should Be "em2"
-        $result.tag | Should Be "1234"
-        $result.vlanif | Should Be "em2_vlan1234"
-        Get-OpnSenseVLAN $conf -Interface "em2" -VLANTag "1234" | Should Be $result
-        Get-OpnSenseVLAN $conf -Interface "em0" -VLANTag "10" | Should Not Be $result
+        $result.Name | Should Be "opt11"
+        $result.Interface | Should Be "em2"
+        $result.Description | Should Be "test1"
+        Get-OpnSenseInterface $conf "opt11" | Should Be $result
+        Get-OpnSenseInterface $conf "wan" | Should Not Be $result
     }
-    It 'Refuses to create a duplicate VLAN' {
-        { New-OpnSenseVLAN $conf -Interface "em2" -VLANTag 1234 } | Should Throw
+    It 'Refuses to create a duplicate Interface' {
+        { New-OpnSenseInterface $conf -Name "opt11" -Interface "em999" -Description "test2" } | Should Throw
+        (Get-OpnSenseInterface $conf "opt11").Name | Should not be "test2"
     }
 }
-
+<#
 Describe 'Set-OpnSenseVLAN' {
     It 'Sets a description of a single VLAN by value' {
         (Get-OpnSenseVLAN $conf -Interface em0 -VLANTag 10).descr | Should Not Be "test1"
