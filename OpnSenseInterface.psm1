@@ -42,7 +42,7 @@ function New-OpnSenseInterface {
         # A string containing a "friendly description" of the interface in question.
         # Defaults to 
         [Parameter(Mandatory=$False)]
-        [string]$Description = $Interface.ToUpper()
+        [string]$Description
     )
     if (-not $name) {
         # A name was not provided, so we need to find a free opt interface.
@@ -50,13 +50,16 @@ function New-OpnSenseInterface {
         do {
             $Name = "opt$i"
             $i++
-        } while (-not (Get-OpnSenseInterface -Name $Name))
+        } while (Get-OpnSenseInterface $ConfigXML -Name $Name)
     } else {
         $Name = $Name.ToLower()
         # Refuse to create a duplicate
         if (Get-OpnSenseInterface $ConfigXML -Name $Name) {
             Throw "Interface already exists!"
         }
+    }
+    if (-not $Description) {
+        $Description = $Name.ToUpper()
     }
     $if = $ConfigXML.CreateElement($Name)
     foreach ($elementname in @("descr", "if", "enable", "spoofmac")) {

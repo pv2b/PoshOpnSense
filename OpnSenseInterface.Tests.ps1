@@ -133,6 +133,19 @@ Describe 'New-OpnSenseInterface' {
         { New-OpnSenseInterface $conf -Name "opt11" -Interface "em999" -Description "test2" } | Should Throw
         (Get-OpnSenseInterface $conf "opt11").Name | Should not be "test2"
     }
+    It 'Automatically takes the first free opt interface name if not given' {
+        # Test the opt1 special case
+        $if = New-OpnSenseInterface $conf -Interface "em2"
+        $if.Name | Should Be "opt1"
+        $if = New-OpnSenseInterface $conf -Interface "em3"
+        $if.Name | Should Be "opt3"
+    }
+    It 'Sets the description from the name if not given' {
+        $if = New-OpnSenseInterface $conf -Name "opt99" -Interface "em99"
+        $if.Description | Should BeExactly "OPT99"
+        $if = New-OpnSenseInterface $conf -Interface "em98"
+        $if.Description | Should Be $if.Name.ToUpper()
+    }
 }
 <#
 Describe 'Set-OpnSenseVLAN' {
