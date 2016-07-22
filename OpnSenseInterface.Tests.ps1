@@ -89,43 +89,27 @@ Describe 'Get-OpnSenseInterface' {
         $interface.descr = 'asdf'
         $interface.Description | Should be $interface.descr
     }
-<#
-    It 'Filters on Interface Only' {
-        $result = Get-OpnSenseVLAN $conf -Interface "em0"
-        $result.GetType().Name | Should Be 'Object[]'
-        $result.Count | Should Be 3
-        $result | % { $_.if | Should Be "em0" }
+
+    It 'Can get interface by name (lowercase)' {
+        $result = Get-OpnSenseInterface $conf -Name "opt2"
+        $result.GetType().Name | Should Be 'XMLElement'
+        $result | % { $_.if | Should Be "em0_vlan18" }
     }
 
-    It 'Filters on VLANTag Only' {
-        $result = Get-OpnSenseVLAN $conf -VLANTag 10
-        $result.GetType().Name | Should Be 'Object[]'
-        $result.Count | Should Be 2
-        $result | % { $_.tag | Should Be 10 }
+    It "Can get interface by name (mixed case)" {
+        $result = Get-OpnSenseInterface $conf -Name "OpT2"
+        $result.GetType().Name | Should Be 'XMLElement'
+        $result | % { $_.if | Should Be "em0_vlan18" }
     }
 
-    It 'Filters on both Interface and VLANTag' {
-        $result = Get-OpnSenseVLAN $conf -Interface "em1" -VLANTag 10
-        $result.GetType().Name | Should Be 'XmlElement'
-        $result.vlanif | Should Be "em1_vlan10"
+    It 'Validates parameter input for name' {
+        { Get-OpnSenseInterface $conf -Name "Wan" } | Should Not Throw
+        { Get-OpnSenseInterface $conf -Name "LAN" } | Should Not Throw
+        { Get-OpnSenseInterface $conf -Name "opt234" } | Should Not Throw
+        { Get-OpnSenseInterface $conf -Name "opt" } | Should Throw
+        { Get-OpnSenseInterface $conf -Name "" } | Should Throw
+        { Get-OpnSenseInterface $conf -Name "pnyxtr" } | Should Throw
     }
-
-    It 'Validates parameter input for Interface' {
-        { Get-OpnSenseVLAN $conf -Interface "em0" } | Should Not Throw
-        { Get-OpnSenseVLAN $conf -Interface "em9" } | Should Not Throw
-        { Get-OpnSenseVLAN $conf -Interface "em0_vlan10" } | Should Throw
-    }
-
-    It 'Validates parameter input for VLANTag' {
-        { Get-OpnSenseVLAN $conf -VLANTag 1 } | Should Not Throw
-        { Get-OpnSenseVLAN $conf -VLANTag 10 } | Should Not Throw
-        { Get-OpnSenseVLAN $conf -VLANTag "10" } | Should Not Throw
-        { Get-OpnSenseVLAN $conf -VLANTag 10.0 } | Should Not Throw
-        { Get-OpnSenseVLAN $conf -VLANTag 4094 } | Should Not Throw
-        { Get-OpnSenseVLAN $conf -VLANTag 0 } | Should Throw
-        { Get-OpnSenseVLAN $conf -VLANTag -100 } | Should Throw
-    }
-    #>
 }
 
 <#

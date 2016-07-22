@@ -155,11 +155,12 @@ function Get-OpnSenseInterface {
         # A string representing the OPNsense interface name. Must be wan, lan,
         # or opt\d+. If not given, the first available opt interface is used.
         [Parameter(Mandatory=$False)]
-        [ValidatePattern("^(wan|lan|opt\d+)$)]")]
+        [ValidatePattern("^(wan|lan|opt\d+)$")]
         [string]$Name
     )
 
     if ($Name) {
+        $Name = $Name.ToLower()
         $xpath = "/opnsense/interfaces/$Name"
     } else {
         $xpath = "/opnsense/interfaces/*"
