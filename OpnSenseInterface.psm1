@@ -269,28 +269,31 @@ function Remove-OpnSenseInterface {
     Param(
         # The DOM of an OPNsense configuration file. The DOM specified will be
         # changed in place as a result of executing the cmdlet.
-        [Parameter(ParameterSetName="ByValue", Mandatory=$True, ValueFromPipeline=$true)]
+        [Parameter(ParameterSetName="ByValue", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
         [xml]$ConfigXML,
 
         # A string representing the OPNsense interface name. Must be wan, lan,
         # or opt\d+. If not given, the first available opt interface is used.
         [Parameter(ParameterSetName="ByValue", Mandatory=$False)]
-        [ValidatePattern("^(wan|lan|opt\d+)$)]")]
+        [ValidatePattern("^(wan|lan|opt\d+)$")]
         [string]$Name,
 
         # A System.Xml.XmlElement object referring to the interface, as provided by
         # the Get-OpnSenseVLAN cmdlet.
-        [Parameter(ParameterSetName="ByXMLElement", Mandatory=$True, ValueFromPipeline=$true)]
-        [System.Xml.XmlElement]$XMLElement
+        [Parameter(ParameterSetName="ByXMLElement", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
+        [System.Xml.XmlElement[]]$XMLElement
     )
-    if ($PsCmdlet.ParameterSetName -eq "ByValue") {
-        $XMLElement = Get-OpnSenseInterface -Config $ConfigXML -Name $Name
+    Begin {
+        if ($PsCmdlet.ParameterSetName -eq "ByValue") {
+            $XMLElement = Get-OpnSenseInterface $ConfigXML $Name
+        }
     }
-    if ($XMLElement) {
+    Process {
+        if (-not $XMLElement) {
+            Throw "Could not find interface to remove!"
+        }
         $XMLElement | % {
             $_.ParentNode.RemoveChild($_) | Out-Null
         }
-    } else {
-        Throw "Could not find interface to remove!"
     }
 }

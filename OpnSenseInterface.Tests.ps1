@@ -181,47 +181,51 @@ Describe 'Set-OpnSenseInterface' {
         $if | % { $_.Description | Should Be "test5" }
     }
 }
-<#
-Describe 'Remove-OpnSenseVLAN' {
-    It 'Removes a single VLAN by value' {
+
+Describe 'Remove-OpnSenseInterface' {
+    It 'Removes a single interface by value' {
         $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
-        Get-OpnSenseVLAN $conf -Interface em0 -VLANTag 10 | Should Not Be $null
-        Remove-OpnSenseVLAN $conf -Interface em0 -VLANTag 10
-        Get-OpnSenseVLAN $conf -Interface em0 -VLANTag 10 | Should Be $null
+        Get-OpnSenseInterface $conf -Name oPt2 | Should Not Be $null
+        Remove-OpnSenseInterface $conf -Name OPt2
+        Get-OpnSenseInterface $conf -Name opt2 | Should Be $null
     }
-    It 'Removes a single VLAN by pipeline' {
+    It 'Removes a single interface by pipeline' {
         $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
-        $vlan = Get-OpnSenseVLAN $conf -Interface em0 -VLANTag 10
-        $vlan | Should Not Be $null
-        $vlan | Remove-OpnSenseVLAN
-        Get-OpnSenseVLAN $conf -Interface em0 -VLANTag 10 | Should Be $null
+        $if = Get-OpnSenseInterface $conf -Name OPT2
+        $if | Should Not Be $null
+        $if | Remove-OpnSenseInterface
+        Get-OpnSenseInterface $conf -Name opt2 | Should Be $null
     }
-    It 'Removes a single VLAN by argument' {
+    It 'Removes a single interface by argument' {
         $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
-        $vlan = Get-OpnSenseVLAN $conf -Interface em0 -VLANTag 10
-        $vlan | Should Not Be $null
-        Remove-OpnSenseVLAN $vlan
-        Get-OpnSenseVLAN $conf -Interface em0 -VLANTag 10 | Should Be $null
+        $if = Get-OpnSenseInterface $conf -Name OPT2
+        $if | Should Not Be $null
+        Remove-OpnSenseInterface $if
+        Get-OpnSenseInterface $conf -Name opt2 | Should Be $null
     }
-    It 'Removes multiple VLANs by pipeline' {
+    It 'Removes multiple interfaces by pipeline' {
         $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
-        $vlan = Get-OpnSenseVLAN $conf -Interface em0
-        $vlan.Count -gt 1 | Should Be True
-        $vlan | Remove-OpnSenseVLAN
-        Get-OpnSenseVLAN $conf -Interface em0 | Should Be $null
+        $if = Get-OpnSenseInterface $conf | Select -First 2
+        $if.Count -eq 2 | Should Be True
+        $if | Remove-OpnSenseInterface
+        # Only one single element left!
+        $result = Get-OpnSenseInterface $conf
+        $result.GetType().Name | Should Be 'XMLElement'
     }
-    It 'Removes multiple VLANs by argument' {
+    It 'Removes multiple interfaces by argument' {
         $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
-        $vlan = Get-OpnSenseVLAN $conf -Interface em0
-        $vlan.Count -gt 1 | Should Be True
-        Remove-OpnSenseVLAN $vlan
-        Get-OpnSenseVLAN $conf -Interface em0 | Should Be $null
+        $if = Get-OpnSenseInterface $conf | Select -First 2
+        $if.Count -eq 2 | Should Be True
+        Remove-OpnSenseInterface $if
+        # Only one single element left!
+        $result = Get-OpnSenseInterface $conf
+        $result.GetType().Name | Should Be 'XMLElement'
     }
-    It 'Refuses to remove a non-existent VLAN' {
+    It 'Refuses to remove a non-existent interface' {
         $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
-        Get-OpnSenseVLAN $conf -Interface em0 -VLANTag 999 | Should Be $null
-        { Remove-OpnSenseVLAN $conf -Interface em0 -VLANTag 999 } | Should Throw
+        Get-OpnSenseInterface $conf -Name opt567 | Should Be $null
+        { Remove-OpnSenseInterface $conf -Name opt567 } | Should Throw
     }
 }
-#>
+
 Remove-Item $ConfigPath
