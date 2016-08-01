@@ -113,7 +113,7 @@ function Set-OpnSenseVLAN {
     }
     Process {
         $XMLElement | % {
-            if ($Description) {
+            if ($PSBoundParameters.ContainsKey('Description')) {
                 $_.descr = $Description
             }
             Get-OpnSenseVLAN -XMLElement $_

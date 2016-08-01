@@ -164,6 +164,11 @@ Describe 'Set-OpnSenseVLAN' {
         Set-OpnSenseVLAN -XMLElement $vlan -Description "test5"
         $vlan | % { $_.descr | Should Be "test5" }
     }
+    It 'Properly handles empty strings for descriptions' {
+        (Get-OpnSenseVLAN $conf -Interface em0 -VLANTag 10).descr | Should Not Be ""
+        Set-OpnSenseVLAN $conf -Interface em0 -VLANTag 10 -Description ""
+        (Get-OpnSenseVLAN $conf -Interface em0 -VLANTag 10).descr | Should Be ""
+    }
 }
 
 Describe 'Remove-OpnSenseVLAN' {
