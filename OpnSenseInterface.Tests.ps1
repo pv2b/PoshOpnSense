@@ -181,10 +181,12 @@ Describe 'Set-OpnSenseInterface' {
         $if | % { $_.Description | Should Be "test5" }
     }
 
-    $if = Get-OpnSenseInterface $conf opt1
+    $if = Get-OpnSenseInterface $conf opt2
     It 'Can be enabled/disabled' {
         $if.Enabled | Should be $true
-        Set-OpnSenseInterface $if -Enabled $false
+        Set-OpnSenseInterface $if -Enable
+        $if.Enabled | Should be $false
+        Set-OpnSenseInterface $if -Disable
         $if.Enabled | Should be $false
     }
 
