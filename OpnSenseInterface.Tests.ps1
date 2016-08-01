@@ -184,101 +184,101 @@ Describe 'Set-OpnSenseInterface' {
     It 'Can set SpoofMac' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.SpoofMAC | Should be ""
-        Set-OpnSenseInterface $if -SpoofMac "11:22:33:44:55:66"
+        Set-OpnSenseInterface -XMLElement $if -SpoofMac "11:22:33:44:55:66"
         $if.SpoofMAC | Should be "11:22:33:44:55:66"
-        Set-OpnSenseInterface $if -SpoofMac ""
+        Set-OpnSenseInterface -XMLElement $if -SpoofMac ""
         $if.SpoofMAC | Should be ""
     }
 
     It 'Validates SpoofMac parameter' {
         $if = Get-OpnSenseInterface $conf -Name WaN
-        { Set-OpnSenseInterface $if -SpoofMac "pnyxtr" } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -SpoofMac "pnyxtr" } | Should Throw
     }
 
     It 'Can set interface' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.Interface | Should not be "em55"
-        Set-OpnSenseInterface $if -Interface "em55"
+        Set-OpnSenseInterface -XMLElement $if -Interface "em55"
         $if.Interface | Should be "em55"
     }
 
     It 'Can set IPAddress' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.IPAddress | Should not be "192.0.2.123"
-        Set-OpnSenseInterface $if -IPAddress "192.0.2.123"
+        Set-OpnSenseInterface -XMLElement $if -IPAddress "192.0.2.123"
         $if.IPAddress | Should be "192.0.2.123"
     }
 
     It 'Can set IPv6 Address' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.IPv6Address | Should not be "2001:db8:abcd:1::123"
-        Set-OpnSenseInterface $if -IPAddress "2001:db8:abcd:1::123"
+        Set-OpnSenseInterface -XMLElement $if -IPAddress "2001:db8:abcd:1::123"
         $if.IPv6Address | Should be "2001:db8:abcd:1::123"
     }
 
     It 'Validates IPAddress parameter' {
         $if = Get-OpnSenseInterface $conf -Name WaN
-        { Set-OpnSenseInterface $if -IPAddress "192.0.2.257" } | Should Throw
-        { Set-OpnSenseInterface $if -IPAddress "123456" } | Should Throw
-        { Set-OpnSenseInterface $if -IPAddress "1.2.3." } | Should Throw
-        { Set-OpnSenseInterface $if -IPAddress "zxcv" } | Should Throw
-        { Set-OpnSenseInterface $if -IPAddress "1a7.1.2.3" } | Should Throw
-        { Set-OpnSenseInterface $if -IPAddress "2001:db8:abcd:1::123" } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPAddress "192.0.2.257" } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPAddress "123456" } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPAddress "1.2.3." } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPAddress "zxcv" } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPAddress "1a7.1.2.3" } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPAddress "2001:db8:abcd:1::123" } | Should Throw
     }
 
     It 'Validates IPv6Address parameter' {
         $if = Get-OpnSenseInterface $conf -Name WaN
-        { Set-OpnSenseInterface $if -IPv6Address "fffg:db8:abcd:1::123" } | Should Throw
-        { Set-OpnSenseInterface $if -IPv6Address "123456" } | Should Throw
-        { Set-OpnSenseInterface $if -IPv6Address "1.2.3." } | Should Throw
-        { Set-OpnSenseInterface $if -IPv6Address "zxcv" } | Should Throw
-        { Set-OpnSenseInterface $if -IPv6Address "1a7.1.2.3" } | Should Throw
-        { Set-OpnSenseInterface $if -IPv6Address "192.0.2.123" } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPv6Address "fffg:db8:abcd:1::123" } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPv6Address "123456" } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPv6Address "1.2.3." } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPv6Address "zxcv" } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPv6Address "1a7.1.2.3" } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPv6Address "192.0.2.123" } | Should Throw
     }
 
     It 'Sets prefix length' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.IPPrefixLength | Should not be 30
-        Set-OpnSenseInterface $if -IPPrefixLength
+        Set-OpnSenseInterface -XMLElement $if -IPPrefixLength
         $if.IPPrefixLength | Should be 30
     }
 
     It 'Validates prefix length' {
         $if = Get-OpnSenseInterface $conf -Name WaN
-        { Set-OpnSenseInterface $if -IPPrefixLength -1 } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPPrefixLength -1 } | Should Throw
         # Weird but valid configurations...
-        { Set-OpnSenseInterface $if -IPPrefixLength 0 } | Should Not Throw
-        { Set-OpnSenseInterface $if -IPPrefixLength 32 } | Should Not Throw
-        { Set-OpnSenseInterface $if -IPPrefixLength 33 } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPPrefixLength 0 } | Should Not Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPPrefixLength 32 } | Should Not Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPPrefixLength 33 } | Should Throw
     }
 
     It 'Sets prefix length' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.IPv6PrefixLength | Should not be 65
-        Set-OpnSenseInterface $if -IPv6PrefixLength
+        Set-OpnSenseInterface -XMLElement $if -IPv6PrefixLength
         $if.IPv6PrefixLength | Should be 65
     }
 
     It 'Validates ipv6 prefix length' {
         $if = Get-OpnSenseInterface $conf -Name WaN
-        { Set-OpnSenseInterface $if -IPv6PrefixLength -1 } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPv6PrefixLength -1 } | Should Throw
         # Weird but valid configurations...
-        { Set-OpnSenseInterface $if -IPv6PrefixLength 0 } | Should Not Throw
-        { Set-OpnSenseInterface $if -IPv6PrefixLength 32 } | Should Not Throw
-        { Set-OpnSenseInterface $if -IPv6PrefixLength 33 } | Should Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPv6PrefixLength 0 } | Should Not Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPv6PrefixLength 32 } | Should Not Throw
+        { Set-OpnSenseInterface -XMLElement $if -IPv6PrefixLength 33 } | Should Throw
     }
 
     It 'Can set BlockBogons' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.BlockBogons | Should be $true
-        Set-OpnSenseInterface $if -BlockBogons $false
+        Set-OpnSenseInterface -XMLElement $if -BlockBogons $false
         $if.BlockBogons | Should be $false
     }
 
     It 'Can set BlockRFC1918' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.BlockRFC1918 | Should be $true
-        Set-OpnSenseInterface $if -BlockRFC1918 $false
+        Set-OpnSenseInterface -XMLElement $if -BlockRFC1918 $false
         $if.BlockRFC1918 | Should be $false
     }
 }
