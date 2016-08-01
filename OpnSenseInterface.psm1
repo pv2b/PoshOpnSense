@@ -131,10 +131,10 @@ function Set-OpnSenseInterface {
             if ($PsCmdlet.ParameterSetName -eq "ByElement") {
                 $XMLElement = Get-OpnSenseInterface $XMLElement
             }
-            if ($Interface) {
+            if ($PSBoundParameters.ContainsKey('Interface')) {
                 $_.if = $Interface
             }
-            if ($Description) {
+            if ($PSBoundParameters.ContainsKey('Description')) {
                 $_.descr = $Description
             }
             $_
