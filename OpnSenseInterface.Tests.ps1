@@ -34,7 +34,7 @@ Set-Content $ConfigPath -Value @"
     <opt2>
       <if>em0_vlan18</if>
       <descr>DMZ</descr>
-      <enable>1</enable>
+      <enable></enable>
       <spoofmac/>
       <blockbogons>1</blockbogons>
       <ipaddr>192.0.2.129</ipaddr>
@@ -181,15 +181,6 @@ Describe 'Set-OpnSenseInterface' {
         $if | % { $_.Description | Should Be "test5" }
     }
 
-    $if = Get-OpnSenseInterface $conf opt2
-    It 'Can be enabled/disabled' {
-        $if.Enabled | Should be $true
-        Set-OpnSenseInterface $if -Enable
-        $if.Enabled | Should be $false
-        Set-OpnSenseInterface $if -Disable
-        $if.Enabled | Should be $false
-    }
-
     It 'Can set SpoofMac' {
         $if.SpoofMAC | Should be ""
         Set-OpnSenseInterface $if -SpoofMac "11:22:33:44:55:66"
@@ -304,7 +295,7 @@ Describe 'Remove-OpnSenseInterface' {
     It 'Removes multiple interfaces by pipeline' {
         $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
         $if = Get-OpnSenseInterface $conf | Select -First 2
-        $if.Count -eq 2 | Should Be True
+        $if.Count | Should Be 2
         $if | Remove-OpnSenseInterface
         # Only one single element left!
         $result = Get-OpnSenseInterface $conf
@@ -313,7 +304,7 @@ Describe 'Remove-OpnSenseInterface' {
     It 'Removes multiple interfaces by argument' {
         $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
         $if = Get-OpnSenseInterface $conf | Select -First 2
-        $if.Count -eq 2 | Should Be True
+        $if.Count | Should Be 2
         Remove-OpnSenseInterface $if
         # Only one single element left!
         $result = Get-OpnSenseInterface $conf
@@ -326,4 +317,94 @@ Describe 'Remove-OpnSenseInterface' {
     }
 }
 
-Remove-Item $ConfigPath
+Describe 'Enable-OpnSenseInterface' {
+    It 'Enables a single interface by value' {
+        $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
+        (Get-OpnSenseInterface $conf -Name oPt2).Enabled | Should Be $False
+        Enable-OpnSenseInterface $conf -Name OPt2
+        (Get-OpnSenseInterface $conf -Name oPt2).Enabled | Should Be $True
+    }
+    It 'Enables a single interface by pipeline' {
+        $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
+        $if = Get-OpnSenseInterface $conf -Name OPT2
+        $if.Enabled | Should Be $False
+        $if | Enable-OpnSenseInterface
+        (Get-OpnSenseInterface $conf -Name opt2).Enabled | Should Be $true
+    }
+    It 'Enables a single interface by argument' {
+        $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
+        $if = Get-OpnSenseInterface $conf -Name OPT2
+        $if.Enabled | Should Be $false
+        Enable-OpnSenseInterface $if
+        (Get-OpnSenseInterface $conf -Name opt2).Enabled | Should Be $true
+    }
+    It 'Enables multiple interfaces by pipeline' {
+        $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
+        $if = Get-OpnSenseInterface $conf
+        $if.Count | Should Be 3
+        $if | Enable-OpnSenseInterface
+        Get-OpnSenseInterface $conf | % {
+            $_.enabled | Should Be $true
+        }
+    }
+    It 'Enables multiple interfaces by argument' {
+        $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
+        $if = Get-OpnSenseInterface $conf
+        $if.Count | Should Be 3
+        Enable-OpnSenseInterface $if
+        Get-OpnSenseInterface $conf | % {
+            $_.enabled | Should Be $true
+        }
+    }
+    It 'Refuses to enable a non-existent interface' {
+        $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
+        Get-OpnSenseInterface $conf -Name opt567 | Should Be $null
+        { Enable-OpnSenseInterface $conf -Name opt567 } | Should Throw
+    }
+}
+
+Describe 'Disable-OpnSenseInterface' {
+    It 'Disables a single interface by value' {
+        $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
+        (Get-OpnSenseInterface $conf -Name lAn).Enabled | Should Be $True
+        Disable-OpnSenseInterface $conf -Name LAn
+        (Get-OpnSenseInterface $conf -Name lan).Enabled | Should Be $False
+    }
+    It 'Disables a single interface by pipeline' {
+        $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
+        $if = Get-OpnSenseInterface $conf -Name lAn
+        $if.Enabled | Should Be $true
+        $if | Disable-OpnSenseInterface
+        (Get-OpnSenseInterface $conf -Name LAN).Enabled | Should Be $false
+    }
+    It 'Disables a single interface by argument' {
+        $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
+        $if = Get-OpnSenseInterface $conf -Name lan
+        $if.Enabled | Should Be $true
+        Disable-OpnSenseInterface $if
+        (Get-OpnSenseInterface $conf -Name laN).Enabled | Should Be $false
+    }
+    It 'Disables multiple interfaces by pipeline' {
+        $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
+        $if = Get-OpnSenseInterface $conf
+        $if.Count | Should Be 3
+        $if | Disable-OpnSenseInterface
+        Get-OpnSenseInterface $conf | % {
+            $_.enabled | Should Be $false
+        }
+    }
+    It 'Disables multiple interfaces by argument' {
+        $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
+        $if = Get-OpnSenseInterface $conf
+        $if.Count | Should Be 3
+        Disable-OpnSenseInterface $if
+        Get-OpnSenseInterface $conf | % {
+            $_.enabled | Should Be $false
+        }
+    }
+    It 'Refuses to disable a non-existent interface' {
+        $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
+        Get-OpnSenseInterface $conf -Name opt567 | Should Be $null
+        { Disable-OpnSenseInterface $conf -Name opt567 } | Should Throw
+    }
+}

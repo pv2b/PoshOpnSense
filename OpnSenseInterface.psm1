@@ -297,3 +297,113 @@ function Remove-OpnSenseInterface {
         }
     }
 }
+
+<#
+
+.SYNOPSIS
+
+Disables an interface in an OPNsense configuration file.
+
+.DESCRIPTION
+
+The Disable-OpnSenseVLAN function manipulates the DOM of an OPNsense XML
+configuration document in order to disable an interface.
+
+The interface to be removed can either be specified by value, or providing a
+System.Xml.XmlElement object referring to the interface, as provided by the
+Get-OpnSenseInterface cmdlet.
+
+.NOTES
+
+Both the Name and Interface arguments are optional. If neither is specified,
+and the ConfigXML parameter is used, this will therefore disable all
+interfaces.
+#>
+function Disable-OpnSenseInterface {
+    [Cmdletbinding()]
+    Param(
+        # The DOM of an OPNsense configuration file. The DOM specified will be
+        # changed in place as a result of executing the cmdlet.
+        [Parameter(ParameterSetName="ByValue", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
+        [xml]$ConfigXML,
+
+        # A string representing the OPNsense interface name. Must be wan, lan,
+        # or opt\d+. If not given, the first available opt interface is used.
+        [Parameter(ParameterSetName="ByValue", Mandatory=$False)]
+        [ValidatePattern("^(wan|lan|opt\d+)$")]
+        [string]$Name,
+
+        # A System.Xml.XmlElement object referring to the interface, as provided by
+        # the Get-OpnSenseVLAN cmdlet.
+        [Parameter(ParameterSetName="ByXMLElement", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
+        [System.Xml.XmlElement[]]$XMLElement
+    )
+    Begin {
+        if ($PsCmdlet.ParameterSetName -eq "ByValue") {
+            $XMLElement = Get-OpnSenseInterface $ConfigXML $Name
+        }
+    }
+    Process {
+        if (-not $XMLElement) {
+            Throw "Could not find interface to remove!"
+        }
+        $XMLElement | % {
+            $_.enable = ""
+        }
+    }
+}
+
+<#
+
+.SYNOPSIS
+
+Enables an interface in an OPNsense configuration file.
+
+.DESCRIPTION
+
+The Enable-OpnSenseVLAN function manipulates the DOM of an OPNsense XML
+configuration document in order to enable an interface.
+
+The interface to be removed can either be specified by value, or providing a
+System.Xml.XmlElement object referring to the interface, as provided by the
+Get-OpnSenseInterface cmdlet.
+
+.NOTES
+
+Both the Name and Interface arguments are optional. If neither is specified,
+and the ConfigXML parameter is used, this will therefore enable all
+interfaces.
+#>
+function Enable-OpnSenseInterface {
+    [Cmdletbinding()]
+    Param(
+        # The DOM of an OPNsense configuration file. The DOM specified will be
+        # changed in place as a result of executing the cmdlet.
+        [Parameter(ParameterSetName="ByValue", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
+        [xml]$ConfigXML,
+
+        # A string representing the OPNsense interface name. Must be wan, lan,
+        # or opt\d+. If not given, the first available opt interface is used.
+        [Parameter(ParameterSetName="ByValue", Mandatory=$False)]
+        [ValidatePattern("^(wan|lan|opt\d+)$")]
+        [string]$Name,
+
+        # A System.Xml.XmlElement object referring to the interface, as provided by
+        # the Get-OpnSenseVLAN cmdlet.
+        [Parameter(ParameterSetName="ByXMLElement", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
+        [System.Xml.XmlElement[]]$XMLElement
+    )
+    Begin {
+        if ($PsCmdlet.ParameterSetName -eq "ByValue") {
+            $XMLElement = Get-OpnSenseInterface $ConfigXML $Name
+        }
+    }
+    Process {
+        if (-not $XMLElement) {
+            Throw "Could not find interface to remove!"
+        }
+        $XMLElement | % {
+            $_.enable = "1"
+        }
+    }
+}

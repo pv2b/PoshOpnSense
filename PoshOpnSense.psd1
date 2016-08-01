@@ -80,6 +80,8 @@ FunctionsToExport = @( `
     'Set-OpnSenseInterface',
     'Get-OpnSenseInterface',
     'Remove-OpnSenseInterface'
+    'Disable-OpnSenseInterface'
+    'Enable-OpnSenseInterface'
 )
 
 # Cmdlets to export from this module
