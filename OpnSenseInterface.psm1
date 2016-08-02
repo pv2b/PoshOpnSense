@@ -120,7 +120,29 @@ function Set-OpnSenseInterface {
         [string]$Description,
 
         [Parameter(Mandatory=$False)]
-        [string]$SpoofMac
+        [string]$SpoofMac,
+
+        [Parameter(Mandatory=$False)]
+        [ValidateScript({ $_.AddressFamily -eq "InterNetwork" })]
+        [ipaddress]$IPAddress,
+
+        [ValidateScript({ $_.AddressFamily -eq "InterNetworkV6" })]
+        [Parameter(Mandatory=$False)]
+        [ipaddress]$IPv6Address,
+
+        [ValidateRange(0,32)]
+        [Parameter(Mandatory=$False)]
+        [int]$IPPrefixLength,
+
+        [ValidateRange(0,128)]
+        [Parameter(Mandatory=$False)]
+        [int]$IPv6PrefixLength,
+
+        [Parameter(Mandatory=$False)]
+        [bool]$BlockBogons,
+
+        [Parameter(Mandatory=$False)]
+        [bool]$BlockRFC1918
     )
     Begin {
         if ($PsCmdlet.ParameterSetName -eq "ByName") {
@@ -133,14 +155,55 @@ function Set-OpnSenseInterface {
     }
     Process {
         $OpnSenseInterface | % {
+            $x = $_.XMLElement
             if ($PSBoundParameters.ContainsKey('Interface')) {
-                $_.XMLElement.if = $Interface
+                $x.if = $Interface
             }
             if ($PSBoundParameters.ContainsKey('Description')) {
-                $_.XMLElement.descr = $Description
+                $x.descr = $Description
             }
             if ($PSBoundParameters.ContainsKey('SpoofMac')) {
-                $_.XMLElement.spoofmac = $SpoofMac
+                $x.spoofmac = $SpoofMac
+            }
+            if ($PSBoundParameters.ContainsKey('IPAddress')) {
+                $x.ipaddr = $IPAddress.ToString()
+            }
+            if ($PSBoundParameters.ContainsKey('IPv6Address')) {
+                $x.ipaddrv6 = $IPv6Address.ToString()
+            }
+            if ($PSBoundParameters.ContainsKey('IPPrefixLength')) {
+                $x.subnet = $IPPrefixLength.ToString()
+            }
+            if ($PSBoundParameters.ContainsKey('IPv6PrefixLength')) {
+                $x.subnetv6 = $IPv6PrefixLength.ToString()
+            }
+            if ($PSBoundParameters.ContainsKey('BlockBogons')) {
+                $n = $x.SelectSingleNode('blockbogons')
+                if ($BlockBogons) {
+                    if (-not $n) {
+                        $n = $ConfigXML.CreateElement('blockbogons')
+                        $x.AppendChild($n) | Out-Null
+                    }
+                    $x.blockbogons = "1"
+                } else {
+                    if ($n) {
+                        $x.RemoveChild($n) | Out-Null
+                    }
+                }
+            }
+            if ($PSBoundParameters.ContainsKey('BlockRFC1918')) {
+                $n = $x.SelectSingleNode('blockpriv')
+                if ($BlockBogons) {
+                    if (-not $n) {
+                        $n = $ConfigXML.CreateElement('blockpriv')
+                        $x.AppendChild($n) | Out-Null
+                    }
+                    $x.blockpriv = "1"
+                } else {
+                    if ($n) {
+                        $x.RemoveChild($n) | Out-Null
+                    }
+                }
             }
             $_
         }
