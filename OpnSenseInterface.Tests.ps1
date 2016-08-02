@@ -191,8 +191,14 @@ Describe 'Set-OpnSenseInterface' {
     It 'Can set SpoofMac' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.SpoofMAC | Should be ""
-        Set-OpnSenseInterface -OpnSenseInterface $if -SpoofMac "11:22:33:44:55:66"
-        $if.SpoofMAC | Should be "11:22:33:44:55:66"
+        Set-OpnSenseInterface -OpnSenseInterface $if -SpoofMac "aa:22:33:44:55:66"
+        $if.SpoofMAC | Should BeExactly "aa:22:33:44:55:66"
+        # Cisco style
+        Set-OpnSenseInterface -OpnSenseInterface $if -SpoofMac "Bb33.4455.6677"
+        $if.SpoofMAC | Should BeExactly "bb:33:44:55:66:77"
+        # Crazy random style
+        Set-OpnSenseInterface -OpnSenseInterface $if -SpoofMac "1234aBCd-12-34"
+        $if.SpoofMAC | Should BeExactly "12:34:ab:cd:12:34"
         Set-OpnSenseInterface -OpnSenseInterface $if -SpoofMac ""
         $if.SpoofMAC | Should be ""
     }
