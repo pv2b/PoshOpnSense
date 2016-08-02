@@ -68,3 +68,27 @@
 
     return $MacAddress
 }
+
+function Join-Array {
+    [CmdletBinding()]
+    
+    Param(
+    [hashtable[]]$InputObject
+    )
+
+    $done = $false
+    for ($i = 0; -not $done; $i++) {
+        $done = $true
+        $obj = New-Object PSObject
+        foreach ($_ in $InputObject) {
+            $k = $_.Name
+            if ($i -lt $_.Array.Length) {
+                $obj | Add-Member $_.Name $_.Array[$i]
+                $done = $false
+            }
+        }
+        if (-not $done) {
+            $obj
+        }
+    }
+}

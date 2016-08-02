@@ -21,3 +21,67 @@ Describe 'NormalizeMacAddress' {
         { NormalizeMacAddress("12.34.12.34.12.99.99") } | Should Throw
     }
 }
+
+Describe 'Join-Array' {
+    It 'Joins arrays' {
+        $names = ("apple", "banana", "pineapple")
+        $numbers = 9923, 1234, 7123
+
+        $joined = Join-Array @{Name="Number"; Array=$numbers}, @{Name="Name"; Array=$names}
+        ($joined | Measure-Object).Count | Should Be 3
+        $joined[0].Name | Should Be "apple"
+        $joined[0].Number | Should Be 9923
+        $joined[1].Name | Should Be "banana"
+        $joined[1].Number | Should Be 1234
+        $joined[2].Name | Should Be "pineapple"
+        $joined[2].Number | Should Be 7123
+    }
+
+    It 'Handles arrays of different length' {
+        $names = ("apple", "banana")
+        $numbers = 9923, 1234, 7123
+
+        $joined = Join-Array @{Name="Number"; Array=$numbers}, @{Name="Name"; Array=$names}
+        ($joined | Measure-Object).Count | Should Be 3
+        $joined[0].Name | Should Be "apple"
+        $joined[0].Number | Should Be 9923
+        $joined[1].Name | Should Be "banana"
+        $joined[1].Number | Should Be 1234
+        $joined[2].Name | Should Be $null
+        $joined[2].Number | Should Be 7123
+    }
+
+    It 'Handles arrays of different length (flipped)' {
+        $names = ("apple", "banana")
+        $numbers = 9923, 1234, 7123
+
+        $joined = Join-Array @{Name="Name"; Array=$names}, @{Name="Number"; Array=$numbers}
+        ($joined | Measure-Object).Count | Should Be 3
+        $joined[0].Name | Should Be "apple"
+        $joined[0].Number | Should Be 9923
+        $joined[1].Name | Should Be "banana"
+        $joined[1].Number | Should Be 1234
+        $joined[2].Name | Should Be $null
+        $joined[2].Number | Should Be 7123
+    }
+
+    It 'Properly deals arrays dropping off over time' {
+        $names = ("apple", "banana", "pineapple")
+        $numbers = 9923, 1234
+        $prices = 111
+
+        $joined = Join-Array @{Name="Number"; Array=$numbers}, @{Name="Name"; Array=$names}, @{Name="Price"; Array=$prices}
+        ($joined | Measure-Object).Count | Should Be 3
+        $joined[0].Name | Should Be "apple"
+        $joined[0].Number | Should Be 9923
+        $joined[0].Price | Should Be 111
+
+        $joined[1].Name | Should Be "banana"
+        $joined[1].Number | Should Be 1234
+        $joined[1].Price | Should Be $null
+
+        $joined[2].Name | Should Be "pineapple"
+        $joined[2].Number | Should Be $null
+        $joined[2].Price | Should Be $null
+    }
+}
