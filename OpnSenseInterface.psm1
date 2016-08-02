@@ -1,4 +1,4 @@
-﻿Import-Module '.\Util.psm1'
+﻿Import-Module "$PSScriptRoot\Util.psm1"
 
 <#
 
