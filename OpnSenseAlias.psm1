@@ -1,4 +1,6 @@
-﻿function New-OpnSenseAlias {
+﻿Import-Module "$PSScriptRoot\Util.psm1"
+
+function New-OpnSenseAlias {
     [Cmdletbinding()]
     Param(
         # The DOM of an OPNsense configuration file. The DOM specified will be
@@ -33,6 +35,7 @@
     $XMLElement.type = switch ($Type) {
         "Host" { "host" }
         "Network" { "network" }
+        "Port" { "port" }
         default { Throw "Unrecognised type $Type" }
     }
     $alias = Get-OpnSenseAlias -XMLElement $XMLElement
@@ -105,12 +108,11 @@ function Get-OpnSenseAlias {
     $defaultProperties = @('Name', 'Description', ’Type')
     $defaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultProperties)
     $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($defaultDisplayPropertySet)
-    if ($PsCmdlet.ParameterSetName -eq "ByValue") {
-        $xpath = "/opnsense/aliases/"
+    if ($PsCmdlet.ParameterSetName -eq "ByName") {
+        $xpath = "/opnsense/aliases/alias"
         if ($Name) {
-            $xpath += $Name
-        } else {
-            $xpath += "*"
+            # Safe because $Name is guaranteed only to contain safe characters.
+            $xpath += "[name='$Name']"
         }
         $XMLElement = $ConfigXML.SelectNodes($xpath)
     }
@@ -119,7 +121,15 @@ function Get-OpnSenseAlias {
         $if | Add-Member NoteProperty   XMLElement        $_
         $if | Add-Member ScriptProperty Name              { $this.XMLElement.name }
         $if | Add-Member ScriptProperty Description       { $this.XMLElement.descr }
-        $if | Add-Member ScriptProperty Type              { $this.XMLElement.type }
+        $if | Add-Member ScriptProperty Type {
+            $t = $this.XMLElement.type
+            switch ($t) {
+                "host" { "Host" }
+                "network" { "Network" }
+                "port" { "Port" }
+                default { $t }
+            }
+        }
         $if | Add-Member MemberSet      PSStandardMembers $PSStandardMembers
         $if
     }
@@ -139,12 +149,12 @@ function Get-OpnSenseAliasEntry {
         [string]$Name,
 
         [Parameter(ParameterSetName="ByOpnSenseAlias", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
-        [PSCustomObject[]]$OpnSenseAlias
+        [PSCustomObject]$OpnSenseAlias
     )
     $defaultProperties = @('Address', 'Description')
     $defaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultProperties)
     $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($defaultDisplayPropertySet)
-    if ($PsCmdlet.ParameterSetName -eq "ByValue") {
+    if ($PsCmdlet.ParameterSetName -eq "ByName") {
         $OpnSenseAlias = Get-OpnSenseAlias $ConfigXML $Name
     }
     if (-not $OpnSenseAlias) {
@@ -156,11 +166,11 @@ function Get-OpnSenseAliasEntry {
     # element contains a ||-seperated list of description elements.
     # The nth address element corresponds to the nth description element.
 
-    $addresses = $_.XMLElement.address -split ' '
-    $descriptions = $_.XMLElement.detail -split '||'
+    $addresses = $OpnSenseAlias.XMLElement.address -split ' '
+    $descriptions = $OpnSenseAlias.XMLElement.detail -split '\|\|'
 
-    Join-Object @{Name="Address"; Array=$addresses}, @{Name="Description"; Array=$descriptions} | % {
-        # Just building on the object returned by Join-Object
+    Join-Array @{Name="Address"; Array=$addresses}, @{Name="Description"; Array=$descriptions} | % {
+        # Just building on the object returned by Join-Array
         $_ | Add-Member NoteProperty XMLElement        $_
         $_ | Add-Member MemberSet    PSStandardMembers $PSStandardMembers
         $_
