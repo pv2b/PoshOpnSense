@@ -95,7 +95,7 @@ function Get-OpnSenseAlias {
         [xml]$ConfigXML,
 
         # A string representing the OPNsense alias name.
-        [Parameter(ParameterSetName="ByName", Mandatory=$True)]
+        [Parameter(ParameterSetName="ByName", Mandatory=$False)]
         [ValidatePattern("^[A-Za-z0-9_]+$")]
         [string]$Name,
 
