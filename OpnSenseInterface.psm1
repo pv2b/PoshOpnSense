@@ -262,16 +262,16 @@ function Get-OpnSenseInterface {
         [System.Xml.XmlElement[]]$XMLElement
     )
 
-    if ($Name) {
-        $Name = $Name.ToLower()
-        $xpath = "/opnsense/interfaces/$Name"
-    } else {
-        $xpath = "/opnsense/interfaces/*"
-    }
     $defaultProperties = @('Name', 'Interface', 'Description', ’IPAddress', 'IPv6Address', 'Enabled')
     $defaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultProperties)
     $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($defaultDisplayPropertySet)
     if ($PsCmdlet.ParameterSetName -eq "ByValue") {
+        $xpath = "/opnsense/interfaces/"
+        if ($Name) {
+            $xpath += $Name.ToLower()
+        } else {
+            $xpath += "*"
+        }
         $XMLElement = $ConfigXML.SelectNodes($xpath)
     }
     $XMLElement | % {
