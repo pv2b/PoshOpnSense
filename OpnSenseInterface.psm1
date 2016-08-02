@@ -61,12 +61,13 @@ function New-OpnSenseInterface {
     if (-not $Description) {
         $Description = $Name.ToUpper()
     }
-    $if = $ConfigXML.CreateElement($Name)
+    $XMLElement = $ConfigXML.CreateElement($Name)
     foreach ($elementname in @("descr", "if", "enable", "spoofmac")) {
         $child = $ConfigXML.CreateElement($elementname)
-        $if.AppendChild($child) | Out-Null
+        $XMLElement.AppendChild($child) | Out-Null
     }
-    $ConfigXML.SelectSingleNode('/opnsense/interfaces').AppendChild($if) | Set-OpnSenseInterface -Interface $Interface -Description $Description
+    $ConfigXML.SelectSingleNode('/opnsense/interfaces').AppendChild($XMLElement) | Out-Null
+    Get-OpnSenseInterface -XMLElement $XMLElement | Set-OpnSenseInterface -Interface $Interface -Description $Description
 }
 
 <#
@@ -95,22 +96,17 @@ function Set-OpnSenseInterface {
     Param(
         # The DOM of an OPNsense configuration file. The DOM specified will be
         # changed in place as a result of executing the cmdlet.
-        [Parameter(ParameterSetName="ByValue", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
+        [Parameter(ParameterSetName="ByName", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
         [xml]$ConfigXML,
 
         # A string representing the OPNsense interface name. Must be wan, lan,
         # or opt\d+.
-        [Parameter(ParameterSetName="ByValue", Mandatory=$False)]
+        [Parameter(ParameterSetName="ByName", Mandatory=$False)]
         [ValidatePattern("^(wan|lan|opt\d+)$")]
         [string]$Name,
 
-        # An System.Xml.XmlElement object from an OPNsense configuration file
-        # representing a interface. Such an object is returned by the
-        # Get-OpnSenseInterface cmdlet. The element specified will be changed in
-        # place as a result of executing the cmdlet, and as a result the DOM
-        # containing this element will change.
-        [Parameter(ParameterSetName="ByElement", Mandatory=$True, ValueFromPipeline=$true)]
-        [System.Xml.XmlElement[]]$XMLElement,
+        [Parameter(ParameterSetName="ByOpnSenseInterface", Mandatory=$True, ValueFromPipeline=$true)]
+        [PSCustomObject[]]$OpnSenseInterface,
 
         # A string representing the FreeBSD interface name
         # (as seen in /sbin/ifconfig)
@@ -119,23 +115,26 @@ function Set-OpnSenseInterface {
 
         # A string containing a "friendly description" of the VLAN in question.
         [Parameter(Mandatory=$False)]
-        [string]$Description
+        [string]$Description,
+
+        [Parameter(Mandatory=$False)]
+        [string]$SpoofMac
     )
     Begin {
-        if ($PsCmdlet.ParameterSetName -eq "ByValue") {
-            $XMLElement = Get-OpnSenseInterface $ConfigXML $Name
+        if ($PsCmdlet.ParameterSetName -eq "ByName") {
+            $OpnSenseInterface = Get-OpnSenseInterface $ConfigXML $Name
         }
     }
     Process {
-        $XMLElement | % {
-            if ($PsCmdlet.ParameterSetName -eq "ByElement") {
-                $XMLElement = Get-OpnSenseInterface $XMLElement
-            }
+        $OpnSenseInterface | % {
             if ($PSBoundParameters.ContainsKey('Interface')) {
-                $_.if = $Interface
+                $_.XMLElement.if = $Interface
             }
             if ($PSBoundParameters.ContainsKey('Description')) {
-                $_.descr = $Description
+                $_.XMLElement.descr = $Description
+            }
+            if ($PSBoundParameters.ContainsKey('SpoofMac')) {
+                $_.XMLElement.spoofmac = $SpoofMac
             }
             $_
         }
@@ -207,25 +206,21 @@ function Get-OpnSenseInterface {
         $XMLElement = $ConfigXML.SelectNodes($xpath)
     }
     $XMLElement | % {
-        try {
-            $_ | Add-Member -ErrorAction Stop ScriptProperty Interface { $this.if }
-            $_ | Add-Member -ErrorAction Stop ScriptProperty Description { $this.descr }
-            $_ | Add-Member -ErrorAction Stop ScriptProperty Enabled { [bool]$this.enable }
-            $_ | Add-Member -ErrorAction Stop ScriptProperty IPAddress { [ipaddress]$this.ipaddr }
-            $_ | Add-Member -ErrorAction Stop ScriptProperty IPv6Address { [ipaddress]$this.ipaddrv6 }
-            $_ | Add-Member -ErrorAction Stop ScriptProperty IPPrefixLength { [int]$this.subnet }
-            $_ | Add-Member -ErrorAction Stop ScriptProperty IPv6PrefixLength { [int]$this.subnetv6 }
-            $_ | Add-Member -Force -ErrorAction Stop ScriptProperty BlockBogons { [bool]$this['blockbogons'] }
-            $_ | Add-Member -ErrorAction Stop ScriptProperty BlockRFC1918 { [bool]$this.blockpriv }
-            $_ | Add-Member -Force -ErrorAction Stop ScriptProperty SpoofMac { $this['spoofmac'].InnerText }
-
-            $_ | Add-Member -ErrorAction Stop MemberSet PSStandardMembers $PSStandardMembers
-        } catch {
-            # Ignore any errors in the Add-Members. They will happen if an
-            # XMLElement has been worked on already at an earlier stage, in
-            # which case, adding the ScriptProperties will be redundant.
-        }
-        $_
+        $if = New-Object PSCustomObject
+        $if | Add-Member NoteProperty   XMLElement       $_
+        $if | Add-Member ScriptProperty Name             { $this.XMLElement.Name }
+        $if | Add-Member ScriptProperty Interface        { $this.XMLElement.if }
+        $if | Add-Member ScriptProperty Description      { $this.XMLElement.descr }
+        $if | Add-Member ScriptProperty Enabled          { [bool]$this.XMLElement.enable }
+        $if | Add-Member ScriptProperty IPAddress        { [ipaddress]$this.XMLElement.ipaddr }
+        $if | Add-Member ScriptProperty IPv6Address      { [ipaddress]$this.XMLElement.ipaddrv6 }
+        $if | Add-Member ScriptProperty IPPrefixLength   { [int]$this.XMLElement.subnet }
+        $if | Add-Member ScriptProperty IPv6PrefixLength { [int]$this.XMLElement.subnetv6 }
+        $if | Add-Member ScriptProperty BlockBogons      { [bool]$this.XMLElement.blockbogons }
+        $if | Add-Member ScriptProperty BlockRFC1918     { [bool]$this.XMLElement.blockpriv }
+        $if | Add-Member ScriptProperty SpoofMac         { $this.XMLElement.spoofmac }
+        $if | Add-Member MemberSet      PSStandardMembers $PSStandardMembers
+        $if
     }
 }
 
@@ -278,22 +273,20 @@ function Remove-OpnSenseInterface {
         [ValidatePattern("^(wan|lan|opt\d+)$")]
         [string]$Name,
 
-        # A System.Xml.XmlElement object referring to the interface, as provided by
-        # the Get-OpnSenseVLAN cmdlet.
-        [Parameter(ParameterSetName="ByXMLElement", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
-        [System.Xml.XmlElement[]]$XMLElement
+        [Parameter(ParameterSetName="ByOpnSenseInterface", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
+        [PSCustomObject[]]$OpnSenseInterface
     )
     Begin {
         if ($PsCmdlet.ParameterSetName -eq "ByValue") {
-            $XMLElement = Get-OpnSenseInterface $ConfigXML $Name
+            $OpnSenseInterface = Get-OpnSenseInterface $ConfigXML $Name
         }
     }
     Process {
-        if (-not $XMLElement) {
+        if (-not $OpnSenseInterface) {
             Throw "Could not find interface to remove!"
         }
-        $XMLElement | % {
-            $_.ParentNode.RemoveChild($_) | Out-Null
+        $OpnSenseInterface | % {
+            $_.XMLElement.ParentNode.RemoveChild($_.XMLElement) | Out-Null
         }
     }
 }
@@ -333,22 +326,20 @@ function Disable-OpnSenseInterface {
         [ValidatePattern("^(wan|lan|opt\d+)$")]
         [string]$Name,
 
-        # A System.Xml.XmlElement object referring to the interface, as provided by
-        # the Get-OpnSenseVLAN cmdlet.
-        [Parameter(ParameterSetName="ByXMLElement", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
-        [System.Xml.XmlElement[]]$XMLElement
+        [Parameter(ParameterSetName="ByOpnSenseInterface", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
+        [PSCustomObject[]]$OpnSenseInterface
     )
     Begin {
         if ($PsCmdlet.ParameterSetName -eq "ByValue") {
-            $XMLElement = Get-OpnSenseInterface $ConfigXML $Name
+            $OpnSenseInterface = Get-OpnSenseInterface $ConfigXML $Name
         }
     }
     Process {
-        if (-not $XMLElement) {
-            Throw "Could not find interface to remove!"
+        if (-not $OpnSenseInterface) {
+            Throw "Could not find interface to disable!"
         }
-        $XMLElement | % {
-            $_.enable = ""
+        $OpnSenseInterface | % {
+            $_.XMLElement.enable = ""
         }
     }
 }
@@ -388,22 +379,20 @@ function Enable-OpnSenseInterface {
         [ValidatePattern("^(wan|lan|opt\d+)$")]
         [string]$Name,
 
-        # A System.Xml.XmlElement object referring to the interface, as provided by
-        # the Get-OpnSenseVLAN cmdlet.
-        [Parameter(ParameterSetName="ByXMLElement", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
-        [System.Xml.XmlElement[]]$XMLElement
+        [Parameter(ParameterSetName="ByOpnSenseInterface", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
+        [PSCustomObject[]]$OpnSenseInterface
     )
     Begin {
         if ($PsCmdlet.ParameterSetName -eq "ByValue") {
-            $XMLElement = Get-OpnSenseInterface $ConfigXML $Name
+            $OpnSenseInterface = Get-OpnSenseInterface $ConfigXML $Name
         }
     }
     Process {
-        if (-not $XMLElement) {
+        if (-not $OpnSenseInterface) {
             Throw "Could not find interface to remove!"
         }
-        $XMLElement | % {
-            $_.enable = "1"
+        $OpnSenseInterface | % {
+            $_.XMLElement.enable = "1"
         }
     }
 }

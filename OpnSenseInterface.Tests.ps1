@@ -56,16 +56,16 @@ Describe 'Get-OpnSenseInterface' {
 
     It 'Has handy script properties' {
         Get-OpnSenseInterface $conf | % {
-            $_.Interface        | Should Be $_.if
-            $_.Description      | Should Be $_.descr
-            $_.Enabled          | Should Be ([bool]$_.enable)
-            $_.SpoofMAC         | Should Be $_.spoofmac
-            $_.IPAddress        | Should Be ([ipaddress]$_.ipaddr)
-            $_.IPv6Address      | Should Be ([ipaddress]$_.ipaddrv6)
-            $_.IPPrefixLength   | Should Be ([int]$_.subnet)
-            $_.IPv6PrefixLength | Should Be ([int]$_.subnetv6)
-            $_.BlockBogons      | Should Be ([bool]$_.blockbogons)
-            $_.BlockRFC1918     | Should Be ([bool]$_.blockpriv)
+            $_.Interface        | Should Be $_.XMLElement.if
+            $_.Description      | Should Be $_.XMLElement.descr
+            $_.Enabled          | Should Be ([bool]$_.XMLElement.enable)
+            $_.SpoofMAC         | Should Be $_.XMLElement.spoofmac
+            $_.IPAddress        | Should Be ([ipaddress]$_.XMLElement.ipaddr)
+            $_.IPv6Address      | Should Be ([ipaddress]$_.XMLElement.ipaddrv6)
+            $_.IPPrefixLength   | Should Be ([int]$_.XMLElement.subnet)
+            $_.IPv6PrefixLength | Should Be ([int]$_.XMLElement.subnetv6)
+            $_.BlockBogons      | Should Be ([bool]$_.XMLElement.blockbogons)
+            $_.BlockRFC1918     | Should Be ([bool]$_.XMLElement.blockpriv)
         }
     }
 
@@ -85,21 +85,21 @@ Describe 'Get-OpnSenseInterface' {
     }
 
     It 'Always reflects the same data in these friendly properties' {
-        $interface.descr | Should not be 'asdf'
-        $interface.descr = 'asdf'
-        $interface.Description | Should be $interface.descr
+        $interface.XMLElement.descr | Should not be 'asdf'
+        $interface.XMLElement.descr = 'asdf'
+        $interface.Description | Should be $interface.XMLElement.descr
     }
 
     It 'Can get interface by name (lowercase)' {
         $result = Get-OpnSenseInterface $conf -Name "opt2"
-        $result.GetType().Name | Should Be 'XMLElement'
-        $result | % { $_.if | Should Be "em0_vlan18" }
+        $result.GetType().Name | Should Be 'PSCustomObject'
+        $result | % { $_.Interface | Should Be "em0_vlan18" }
     }
 
     It "Can get interface by name (mixed case)" {
         $result = Get-OpnSenseInterface $conf -Name "OpT2"
-        $result.GetType().Name | Should Be 'XMLElement'
-        $result | % { $_.if | Should Be "em0_vlan18" }
+        $result.GetType().Name | Should Be 'PSCustomObject'
+        $result | % { $_.Interface | Should Be "em0_vlan18" }
     }
 
     It 'Validates parameter input for name' {
@@ -113,7 +113,7 @@ Describe 'Get-OpnSenseInterface' {
 
     It 'Can be given an XML Element as a paramter (useful to add its ScriptProperties if neccessary)' {
         $if = Get-OpnSenseInterface $conf "wan"
-        Get-OpnSenseInterface $if | should be $if
+        (Get-OpnSenseInterface $if.XMLElement).XMLElement | should be $if.XMLElement
     }
 }
 
@@ -121,13 +121,13 @@ Describe 'New-OpnSenseInterface' {
     It 'Adds a new Interface' {
         # Random capital letter in the name to test that value is properly folded to lowercase
         $result = New-OpnSenseInterface $conf -Name "oPt11" -Interface "em2" -Description "test1"
-        $result.GetType().Name | Should Be "XmlElement"
-        # Make sure value is folder to lowercase here!
+        $result.GetType().Name | Should Be "PSCustomObject"
+        # Make sure value is folded to lowercase here!
         $result.Name | Should BeExactly "opt11"
         $result.Interface | Should Be "em2"
         $result.Description | Should Be "test1"
-        Get-OpnSenseInterface $conf "opt11" | Should Be $result
-        Get-OpnSenseInterface $conf "wan" | Should Not Be $result
+        (Get-OpnSenseInterface $conf "opt11").XMLElement | Should Be $result.XMLElement
+        (Get-OpnSenseInterface $conf "wan").XMLElement | Should Not Be $result.XMLElement
     }
     It 'Refuses to create a duplicate Interface' {
         { New-OpnSenseInterface $conf -Name "opt11" -Interface "em999" -Description "test2" } | Should Throw
@@ -150,21 +150,28 @@ Describe 'New-OpnSenseInterface' {
 
 Describe 'Set-OpnSenseInterface' {
     It 'Sets a description of an interface by name' {
-        (Get-OpnSenseInterface $conf -Name WaN).descr | Should Not Be "test1"
+        (Get-OpnSenseInterface $conf -Name WaN).Description | Should Not Be "test1"
         Set-OpnSenseInterface $conf -Name wan -Description "test1"
-        (Get-OpnSenseInterface $conf -Name WAN).descr | Should Be "test1"
+        (Get-OpnSenseInterface $conf -Name WAN).Description | Should Be "test1"
+        Set-OpnSenseInterface $conf -Name wan -Description ""
+        (Get-OpnSenseInterface $conf -Name WAN).Description | Should Be ""
+        Set-OpnSenseInterface $conf -Name wan -Description "test1"
+        (Get-OpnSenseInterface $conf -Name WAN).Description | Should Be "test1"
+        Set-OpnSenseInterface $conf -Name wan
+        Set-OpnSenseInterface $conf -Name wan -Description $null
+        (Get-OpnSenseInterface $conf -Name WAN).Description | Should Be ""
     }
     It 'Sets a description of a single interface by pipeline' {
         $if = Get-OpnSenseInterface $conf -Name wan
-        $if.descr | Should Not Be "test2"
+        $if.Description | Should Not Be "test2"
         $if | Set-OpnSenseInterface -Description "test2"
-        $if.descr | Should Be "test2"
+        $if.Description | Should Be "test2"
     }
     It 'Sets a description of a single interface by argument' {
         $if = Get-OpnSenseInterface $conf -Name Wan
-        $if.descr | Should Not Be "test3"
-        Set-OpnSenseInterface -XMLElement $if -Description "test3"
-        $if.descr | Should Be "test3"
+        $if.Description | Should Not Be "test3"
+        Set-OpnSenseInterface -OpnSenseInterface $if -Description "test3"
+        $if.Description | Should Be "test3"
     }
     It 'Sets a description of a multiple interfaces by pipeline' {
         $if = Get-OpnSenseInterface $conf
@@ -177,108 +184,108 @@ Describe 'Set-OpnSenseInterface' {
         $if = Get-OpnSenseInterface $conf
         $if.Count -gt 1 | Should Be True
         $if | % { $_.Description | Should Not Be "test5" }
-        Set-OpnSenseInterface -XMLElement $if -Description "test5"
+        Set-OpnSenseInterface -OpnSenseInterface $if -Description "test5"
         $if | % { $_.Description | Should Be "test5" }
     }
 
     It 'Can set SpoofMac' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.SpoofMAC | Should be ""
-        Set-OpnSenseInterface -XMLElement $if -SpoofMac "11:22:33:44:55:66"
+        Set-OpnSenseInterface -OpnSenseInterface $if -SpoofMac "11:22:33:44:55:66"
         $if.SpoofMAC | Should be "11:22:33:44:55:66"
-        Set-OpnSenseInterface -XMLElement $if -SpoofMac ""
+        Set-OpnSenseInterface -OpnSenseInterface $if -SpoofMac ""
         $if.SpoofMAC | Should be ""
     }
 
     It 'Validates SpoofMac parameter' {
         $if = Get-OpnSenseInterface $conf -Name WaN
-        { Set-OpnSenseInterface -XMLElement $if -SpoofMac "pnyxtr" } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -SpoofMac "pnyxtr" } | Should Throw
     }
 
     It 'Can set interface' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.Interface | Should not be "em55"
-        Set-OpnSenseInterface -XMLElement $if -Interface "em55"
+        Set-OpnSenseInterface -OpnSenseInterface $if -Interface "em55"
         $if.Interface | Should be "em55"
     }
 
     It 'Can set IPAddress' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.IPAddress | Should not be "192.0.2.123"
-        Set-OpnSenseInterface -XMLElement $if -IPAddress "192.0.2.123"
+        Set-OpnSenseInterface -OpnSenseInterface $if -IPAddress "192.0.2.123"
         $if.IPAddress | Should be "192.0.2.123"
     }
 
     It 'Can set IPv6 Address' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.IPv6Address | Should not be "2001:db8:abcd:1::123"
-        Set-OpnSenseInterface -XMLElement $if -IPAddress "2001:db8:abcd:1::123"
+        Set-OpnSenseInterface -OpnSenseInterface $if -IPAddress "2001:db8:abcd:1::123"
         $if.IPv6Address | Should be "2001:db8:abcd:1::123"
     }
 
     It 'Validates IPAddress parameter' {
         $if = Get-OpnSenseInterface $conf -Name WaN
-        { Set-OpnSenseInterface -XMLElement $if -IPAddress "192.0.2.257" } | Should Throw
-        { Set-OpnSenseInterface -XMLElement $if -IPAddress "123456" } | Should Throw
-        { Set-OpnSenseInterface -XMLElement $if -IPAddress "1.2.3." } | Should Throw
-        { Set-OpnSenseInterface -XMLElement $if -IPAddress "zxcv" } | Should Throw
-        { Set-OpnSenseInterface -XMLElement $if -IPAddress "1a7.1.2.3" } | Should Throw
-        { Set-OpnSenseInterface -XMLElement $if -IPAddress "2001:db8:abcd:1::123" } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPAddress "192.0.2.257" } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPAddress "123456" } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPAddress "1.2.3." } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPAddress "zxcv" } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPAddress "1a7.1.2.3" } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPAddress "2001:db8:abcd:1::123" } | Should Throw
     }
 
     It 'Validates IPv6Address parameter' {
         $if = Get-OpnSenseInterface $conf -Name WaN
-        { Set-OpnSenseInterface -XMLElement $if -IPv6Address "fffg:db8:abcd:1::123" } | Should Throw
-        { Set-OpnSenseInterface -XMLElement $if -IPv6Address "123456" } | Should Throw
-        { Set-OpnSenseInterface -XMLElement $if -IPv6Address "1.2.3." } | Should Throw
-        { Set-OpnSenseInterface -XMLElement $if -IPv6Address "zxcv" } | Should Throw
-        { Set-OpnSenseInterface -XMLElement $if -IPv6Address "1a7.1.2.3" } | Should Throw
-        { Set-OpnSenseInterface -XMLElement $if -IPv6Address "192.0.2.123" } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPv6Address "fffg:db8:abcd:1::123" } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPv6Address "123456" } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPv6Address "1.2.3." } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPv6Address "zxcv" } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPv6Address "1a7.1.2.3" } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPv6Address "192.0.2.123" } | Should Throw
     }
 
     It 'Sets prefix length' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.IPPrefixLength | Should not be 30
-        Set-OpnSenseInterface -XMLElement $if -IPPrefixLength
+        Set-OpnSenseInterface -OpnSenseInterface $if -IPPrefixLength
         $if.IPPrefixLength | Should be 30
     }
 
     It 'Validates prefix length' {
         $if = Get-OpnSenseInterface $conf -Name WaN
-        { Set-OpnSenseInterface -XMLElement $if -IPPrefixLength -1 } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPPrefixLength -1 } | Should Throw
         # Weird but valid configurations...
-        { Set-OpnSenseInterface -XMLElement $if -IPPrefixLength 0 } | Should Not Throw
-        { Set-OpnSenseInterface -XMLElement $if -IPPrefixLength 32 } | Should Not Throw
-        { Set-OpnSenseInterface -XMLElement $if -IPPrefixLength 33 } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPPrefixLength 0 } | Should Not Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPPrefixLength 32 } | Should Not Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPPrefixLength 33 } | Should Throw
     }
 
     It 'Sets prefix length' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.IPv6PrefixLength | Should not be 65
-        Set-OpnSenseInterface -XMLElement $if -IPv6PrefixLength
+        Set-OpnSenseInterface -OpnSenseInterface $if -IPv6PrefixLength
         $if.IPv6PrefixLength | Should be 65
     }
 
     It 'Validates ipv6 prefix length' {
         $if = Get-OpnSenseInterface $conf -Name WaN
-        { Set-OpnSenseInterface -XMLElement $if -IPv6PrefixLength -1 } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPv6PrefixLength -1 } | Should Throw
         # Weird but valid configurations...
-        { Set-OpnSenseInterface -XMLElement $if -IPv6PrefixLength 0 } | Should Not Throw
-        { Set-OpnSenseInterface -XMLElement $if -IPv6PrefixLength 32 } | Should Not Throw
-        { Set-OpnSenseInterface -XMLElement $if -IPv6PrefixLength 33 } | Should Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPv6PrefixLength 0 } | Should Not Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPv6PrefixLength 32 } | Should Not Throw
+        { Set-OpnSenseInterface -OpnSenseInterface $if -IPv6PrefixLength 33 } | Should Throw
     }
 
     It 'Can set BlockBogons' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.BlockBogons | Should be $true
-        Set-OpnSenseInterface -XMLElement $if -BlockBogons $false
+        Set-OpnSenseInterface -OpnSenseInterface $if -BlockBogons $false
         $if.BlockBogons | Should be $false
     }
 
     It 'Can set BlockRFC1918' {
         $if = Get-OpnSenseInterface $conf -Name WaN
         $if.BlockRFC1918 | Should be $true
-        Set-OpnSenseInterface -XMLElement $if -BlockRFC1918 $false
+        Set-OpnSenseInterface -OpnSenseInterface $if -BlockRFC1918 $false
         $if.BlockRFC1918 | Should be $false
     }
 }
@@ -311,7 +318,7 @@ Describe 'Remove-OpnSenseInterface' {
         $if | Remove-OpnSenseInterface
         # Only one single element left!
         $result = Get-OpnSenseInterface $conf
-        $result.GetType().Name | Should Be 'XMLElement'
+        $result.GetType().Name | Should Be 'PSCustomObject'
     }
     It 'Removes multiple interfaces by argument' {
         $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
@@ -320,7 +327,7 @@ Describe 'Remove-OpnSenseInterface' {
         Remove-OpnSenseInterface $if
         # Only one single element left!
         $result = Get-OpnSenseInterface $conf
-        $result.GetType().Name | Should Be 'XMLElement'
+        $result.GetType().Name | Should Be 'PSCustomObject'
     }
     It 'Refuses to remove a non-existent interface' {
         $conf = Get-OpnSenseXMLConfig -FilePath $ConfigPath
