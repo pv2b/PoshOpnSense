@@ -1,4 +1,6 @@
-﻿<#
+﻿Import-Module '.\Util.psm1'
+
+<#
 
 .SYNOPSIS
 
@@ -123,6 +125,10 @@ function Set-OpnSenseInterface {
     Begin {
         if ($PsCmdlet.ParameterSetName -eq "ByName") {
             $OpnSenseInterface = Get-OpnSenseInterface $ConfigXML $Name
+        }
+        # Don't use $PSBoundParameters here, we don't want to run NormalizeMacAddress on an empty MAC.
+        if ($SpoofMac) {
+            $SpoofMac = NormalizeMacAddress($SpoofMac)
         }
     }
     Process {

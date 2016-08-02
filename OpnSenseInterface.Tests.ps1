@@ -196,8 +196,8 @@ Describe 'Set-OpnSenseInterface' {
         # Cisco style
         Set-OpnSenseInterface -OpnSenseInterface $if -SpoofMac "Bb33.4455.6677"
         $if.SpoofMAC | Should BeExactly "bb:33:44:55:66:77"
-        # Crazy random style
-        Set-OpnSenseInterface -OpnSenseInterface $if -SpoofMac "1234aBCd-12-34"
+        # Hyphen style
+        Set-OpnSenseInterface -OpnSenseInterface $if -SpoofMac "12-34-aB-Cd-12-34"
         $if.SpoofMAC | Should BeExactly "12:34:ab:cd:12:34"
         Set-OpnSenseInterface -OpnSenseInterface $if -SpoofMac ""
         $if.SpoofMAC | Should be ""
