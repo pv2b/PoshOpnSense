@@ -155,7 +155,7 @@ function Get-OpnSenseAliasEntry {
     $defaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultProperties)
     $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($defaultDisplayPropertySet)
     if ($PsCmdlet.ParameterSetName -eq "ByName") {
-        $OpnSenseAlias = Get-OpnSenseAlias $ConfigXML $Name
+        $OpnSenseAlias = Get-OpnSenseAlias $ConfigXML -Name $Name
     }
     if (-not $OpnSenseAlias) {
         Throw "Could not get OpnSenseAlias"
