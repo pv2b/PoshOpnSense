@@ -63,6 +63,9 @@ Describe 'Get-OpnSenseAlias' {
         $a.Count | Should Be $null # Can't get a count of a single item. Yay powershell.
         $a.Name| Should Be Two_ports
     }
+    It 'Throws an exception on non-existent alias' {
+        { Get-OpnSenseAlias $conf -Name 'nonexistent' } | Should Throw
+    }
 }
 Describe 'Get-OpnSenseAliasEntry' {
     It 'Can get entries out of a single-entry alias' {
@@ -114,6 +117,41 @@ Describe 'New-OpnSenseAlias' {
         $n.Description | Should Be ""
         $h.Description | Should Be "Test description"
         $n.Description | Should Be ""
+    }
+    It 'Refuses to create a duplicate alias' {
+        { Get-OpnSenseAlias $conf -Name 'No_description' } | Should Not Throw
+        { New-OpnSenseAlias $conf -Name 'No_description' -Type Host } | Should Throw
+    }
+}
+
+Describe 'Set-OpnSenseAlias' {
+    $n = Get-OpnSenseAlias $conf 'Test_Network'
+    It 'Can set description on an alias where one is not present' {
+        $n.Description | Should Be ''
+        $n | Set-OpnSenseAlias -Description 'Test 1'
+        $n.Description | Should Be 'Test 1'
+    }
+    It 'Can update an existing description' {
+        $n.Description | Should Not Be 'Test 2'
+        $n.Description | Should Not Be ''
+        $n | Set-OpnSenseAlias -Description 'Test 2'
+        $n.Description | Should Be 'Test 2'
+    }
+    It 'Can remove an existing description' {
+        $n.Description | Should Not Be ''
+        $n | Set-OpnSenseAlias -Description ''
+        $n.Description | Should Be ''
+    }
+    It 'Can change the name of an existing alias' {
+        $n.Name | Should Be 'Test_Network'
+        Set-OpnSenseAlias $conf -Name 'Test_Network' -NewName 'Test_Namechange'
+        $n.Name | Should Be 'Test_Namechange'
+        { Get-OpnSenseAlias $conf -Name 'Test_Network' } | Should Throw
+        { Get-OpnSenseAlias $conf -Name 'Test_Namechange' } | Should Not Throw
+    }
+    It 'Refuses to create a duplicate alias' {
+        { Get-OpnSenseAlias $conf -Name 'Test_Namechange' } | Should Not Throw
+        { Set-OpnSenseAlias $conf -Name 'Test_Namechange' -NewName 'No_description' } | Should Throw
     }
 }
 

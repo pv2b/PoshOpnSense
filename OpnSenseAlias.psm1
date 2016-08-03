@@ -24,6 +24,14 @@ function New-OpnSenseAlias {
         [string]$Description
     )
 
+    try {
+        $duplicate = (Get-OpnSenseAlias -ConfigXML $ConfigXML -Name $Name) -ne $null
+    } catch {
+        $duplicate = $false
+    }
+    if ($duplicate) {
+        Throw "Alias with the same name already exists"
+    }
     $XMLElement = $ConfigXML.CreateElement('alias')
     foreach ($elementname in @("name", "address", "descr", "type", "detail")) {
         $child = $ConfigXML.CreateElement($elementname)
@@ -61,6 +69,7 @@ function Set-OpnSenseAlias {
         [Parameter(ParameterSetName="ByOpnSenseAlias", Mandatory=$True, ValueFromPipeline=$true, Position=1)]
         [PSCustomObject[]]$OpnSenseAlias,
 
+        [ValidatePattern("^[A-Za-z0-9_]+$")]
         [Parameter(Mandatory=$False)]
         [string]$NewName,
 
@@ -79,6 +88,18 @@ function Set-OpnSenseAlias {
     Process {
         $OpnSenseAlias | % {
             $x = $_.XMLElement
+            # Check preconditions
+            if ($PSBoundParameters.ContainsKey('NewName')) {
+                try {
+                    $duplicate = (Get-OpnSenseAlias -ConfigXML $ConfigXML -Name $NewName) -ne $null
+                } catch {
+                    $duplicate = $false
+                }
+                if ($duplicate) {
+                    Throw "Alias with the same name already exists"
+                }
+            }
+            # Perform changes
             if ($PSBoundParameters.ContainsKey('NewName')) {
                 $x.name = $NewName
             }
@@ -115,6 +136,9 @@ function Get-OpnSenseAlias {
             $xpath += "[name='$Name']"
         }
         $XMLElement = $ConfigXML.SelectNodes($xpath)
+        if (-not $XMLElement) {
+            throw "Alias not found"
+        }
     }
     $XMLElement | % {
         $if = New-Object PSCustomObject
