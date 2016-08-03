@@ -69,7 +69,7 @@ function Set-OpnSenseAlias {
     )
     Begin {
         if ($PsCmdlet.ParameterSetName -eq "ByName") {
-            $OpnSenseInterface = Get-OpnSenseAlias $ConfigXML $Name
+            $OpnSenseAlias = Get-OpnSenseAlias $ConfigXML $Name
         }
         # Don't use $PSBoundParameters here, we don't want to run NormalizeMacAddress on an empty MAC.
         if ($SpoofMac) {
@@ -77,7 +77,7 @@ function Set-OpnSenseAlias {
         }
     }
     Process {
-        $OpnSenseInterface | % {
+        $OpnSenseAlias | % {
             $x = $_.XMLElement
             if ($PSBoundParameters.ContainsKey('NewName')) {
                 $x.name = $NewName
@@ -98,7 +98,7 @@ function Get-OpnSenseAlias {
         [xml]$ConfigXML,
 
         # A string representing the OPNsense alias name.
-        [Parameter(ParameterSetName="ByName", Mandatory=$False)]
+        [Parameter(ParameterSetName="ByName", Mandatory=$False, Position=2)]
         [ValidatePattern("^[A-Za-z0-9_]+$")]
         [string]$Name,
 

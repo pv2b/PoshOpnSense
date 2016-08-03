@@ -95,4 +95,26 @@ Describe 'Get-OpnSenseAliasEntry' {
     }
 }
 
+Describe 'New-OpnSenseAlias' {
+    It 'Can create new aliases' {
+        $ExpectedAliasCount = (Get-OpnSenseAlias $conf).Count + 3
+        $n = $conf | New-OpnSenseAlias -Name 'Test_Network' -Type Network
+        $h = New-OpnSenseAlias -ConfigXML $conf -Name 'Test_Host' -Type Host -Description "Test description"
+        $p = New-OpnSenseAlias $conf -Name 'Test_Port' -Type Port
+        (Get-OpnSenseAlias $conf).Count | Should Be $ExpectedAliasCount
+        (Get-OpnSenseAlias $conf 'Test_Network').XMLElement | Should Be $n.XMLElement
+        (Get-OpnSenseAlias $conf 'Test_Host').XMLElement | Should Be $h.XMLElement
+        (Get-OpnSenseAlias $conf 'Test_Port').XMLElement | Should Be $p.XMLElement
+        $n.Name | Should Be 'Test_Network'
+        $h.Name | Should Be 'Test_Host'
+        $p.Name | Should Be 'Test_Port'
+        $n.Type | Should BeExactly Network
+        $h.Type | Should BeExactly Host
+        $p.Type | Should BeExactly Port
+        $n.Description | Should Be ""
+        $h.Description | Should Be "Test description"
+        $n.Description | Should Be ""
+    }
+}
+
 Remove-Item $ConfigPath
